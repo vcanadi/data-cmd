@@ -17,7 +17,6 @@ import Data.List (intercalate)
 import Data.Typeable (Typeable)
 import Text.Read (readEither)
 import Data.Char (toLower)
-import Control.Monad ((<=<))
 import Data.Bool (bool)
 import DataCmd.Lexer
 import DataCmd.Generic
