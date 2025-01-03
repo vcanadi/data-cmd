@@ -7,7 +7,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module DataCmd.Act.Parser where
+module DataCmd.Parser where
 
 import Data.Kind (Type)
 
@@ -93,11 +93,6 @@ instance GTPπ U1                                       where gTPπ _ _ _ = cons
 
 parseErr :: [String] -> String -> Res a
 parseErr adr msg = Left [["TP err; type: " <> intercalate "." adr <> ", msg: " <> msg]]
-
-actTP :: TP Act
-actTP = aTP [] (Proxy @Act)
-parseAct :: String -> Res Act
-parseAct = actTP <=< tNormalLex
 
 parseEither :: Read a => [String] -> String -> Res a
 parseEither adr w = case readEither w of

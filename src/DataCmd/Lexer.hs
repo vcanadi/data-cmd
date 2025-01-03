@@ -13,7 +13,6 @@ module DataCmd.Lexer where
 
 import Control.Arrow (Arrow (first), left)
 import Data.List (intercalate, isInfixOf, isPrefixOf, isSuffixOf)
-import Data.List.Split (splitOn)
 import Data.Function ((&))
 import Data.Char (isSpace)
 import Data.Bool (bool)
@@ -62,7 +61,14 @@ tDotLex = f 1
     isNested k s = replicate k '.' `isInfixOf` s
 
     separate :: Int -> String -> [String]
-    separate k = filter (not . null) . fmap (unwords . words) . splitOn (" " <> replicate k '.' <> " ")
+    separate k = filter (not . null) . fmap (unwords . words) . splitOn  (" " <> replicate k '.' <> " ")
+
+    splitOn :: Eq a => [a] -> [a] -> [[a]]
+    splitOn xs = f' []
+      where
+        f' acc []                      = reverse acc
+        f' acc ys | xs `isPrefixOf` ys = f' (xs : acc) (drop (length xs) ys)
+                 | otherwise           = f' acc (tail ys)
 
 
 -- | Variant of tBrackLex that adds brackets to whitespace separation
