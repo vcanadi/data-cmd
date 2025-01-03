@@ -1,5 +1,5 @@
-## Title
-Description
+## data-cmd
+Parser and renderer for any(generic) type. Suitable for command line, textual represenation of the type
 
 ### Development
 
@@ -9,6 +9,8 @@ nix-shell --arg withHLS true
 ```
 
 ### Utility
+
+
 
 ### Usage
 

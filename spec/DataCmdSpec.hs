@@ -1,4 +1,4 @@
-module Tmpl.TmplSpec where
+module DataCmdSpec where
 
 import Test.Hspec
 

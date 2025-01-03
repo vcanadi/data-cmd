@@ -1,8 +1,8 @@
 cabal-version: 2.2
 
-name:           tmplhs
+name:           data-cmd
 version:        0.1.0.0
-synopsis:       tmplhs description
+synopsis:       Parser and renderer for any(generic) type. Suitable for command line, textual represenation of the type
 author:         Vito Canadi
 maintainer:     vito.canadi@gmail.com
 license:        NONE
@@ -44,5 +44,5 @@ test-suite spec
   build-depends:
     , base
     , hspec
-    , tmplhs
+    , data-cmd
   default-language: Haskell2010
