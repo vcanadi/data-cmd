@@ -20,6 +20,21 @@ smplsLexBrack =
     , "(0)(1)((20)(21))(((300)(301))((310)(311)))"
     , ND [LF "0",LF "1",ND [LF "20",LF "21"],ND [ND [LF "300",LF "301"],ND [LF "310",LF "311"]]]
     )
+
+  , ( "works on singleton"
+    , "0"
+    , LF "0"
+    )
+
+  , ( "works on nested singleton"
+    , "((0))"
+    , ND [ND [LF "0"]]
+    )
+
+  , ( "works on doubly nested singleton"
+    , "(((0)))"
+    , ND [ND [ND [LF "0"]]]
+    )
   ]
 
 specLexNormal :: Spec
@@ -32,9 +47,9 @@ specLexNormal =
 specLexBrack:: Spec
 specLexBrack =
   describe "lexBrack" $
-    forM_ smplsLexNormal $ \(testDesc, raw, tree) ->
+    forM_ smplsLexBrack $ \(testDesc, raw, tree) ->
       it testDesc $
-        lexNormal raw `shouldBe` Right tree
+        lexBrack raw `shouldBe` Right tree
 
 spec :: Spec
 spec = do

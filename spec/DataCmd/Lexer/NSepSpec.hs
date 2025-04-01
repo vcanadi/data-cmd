@@ -17,6 +17,11 @@ smplsLexNSep =
     , ND [LF "0",LF "1",ND [LF "20",LF "21"],ND [ND [LF "300",LF "301"],ND [LF "310",LF "311"]]]
     )
 
+  -- , ( "works on  singleton"
+  --   , "1"
+  --   , LF "1"
+  --   )
+
   , ( "works on nested singleton"
     , "20..21"
     , ND [ND [LF "20",LF "21"]]
