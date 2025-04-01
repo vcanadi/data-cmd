@@ -14,6 +14,7 @@ let
              ++ (if forExecs then this.getCabalDeps.executableHaskellDepends else [])
              ++ (if forLibs  then this.getCabalDeps.libraryHaskellDepends    else [])
              ++ u.whenFlag withHLS ps.haskell-language-server
+             ++ [ps.implicit-hie]
           );
 in
 pkgs.stdenv.mkDerivation {
