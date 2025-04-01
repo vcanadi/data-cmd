@@ -20,6 +20,7 @@ import Data.Char (toLower)
 import Data.Bool (bool)
 import DataCmd.Lexer
 import DataCmd.Generic
+import DataCmd.Util
 
 -- Parser
 --
