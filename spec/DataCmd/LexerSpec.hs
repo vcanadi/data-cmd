@@ -9,12 +9,12 @@ samples :: [(String, String, Tree)]
 samples =
   [ ( "works on simple example"
     , "0 . 1 . 20 .. 21 . 300 ... 301 .. 310 ... 311"
-    , Node [Leaf "0",Leaf "1",Node [Leaf "20",Leaf "21"],Node [Node [Leaf "300",Leaf "301"],Node [Leaf "310",Leaf "311"]]]
+    , ND [LF "0",LF "1",ND [LF "20",LF "21"],ND [ND [LF "300",LF "301"],ND [LF "310",LF "311"]]]
     )
 
   , ( "works on simple example without spaces"
     , "0.1.20..21.300...301..310...311"
-    , Node [Leaf "0",Leaf "1",Node [Leaf "20",Leaf "21"],Node [Node [Leaf "300",Leaf "301"],Node [Leaf "310",Leaf "311"]]]
+    , ND [LF "0",LF "1",ND [LF "20",LF "21"],ND [ND [LF "300",LF "301"],ND [LF "310",LF "311"]]]
     )
   ]
 

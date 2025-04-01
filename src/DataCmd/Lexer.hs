@@ -12,18 +12,18 @@ import Data.Bool (bool)
 import DataCmd.Util
 
 -- | Result of succesful lexing. Intermediate representation for parsing. Raw text is translated into Tree representation (tree of tokens).
-data Tree = Leaf String | Node [Tree] deriving (Show, Eq)
+data Tree = LF String | ND [Tree] deriving (Show, Eq)
 
-isLeaf :: Tree -> Bool
-isLeaf = \case (Leaf _) -> True; _ -> False
+isLF :: Tree -> Bool
+isLF = \case (LF _) -> True; _ -> False
 
 instance Semigroup Tree where
-  Node ts <> Node ts' = Node $ ts <> ts'
-  Node [] <> l = l
-  Node ts <> l = Node $ ts <> [l]
-  l <> Node [] = l
-  l <> Node ts = Node $ l:ts
-  l <> l' = Node [l,l']
+  ND ts <> ND ts' = ND $ ts <> ts'
+  ND [] <> l = l
+  ND ts <> l = ND $ ts <> [l]
+  l <> ND [] = l
+  l <> ND ts = ND $ l:ts
+  l <> l' = ND [l,l']
 
 -- | Variant of tBrackLex that adds brackets to whitespace separation
 tNormalLex :: String -> Res Tree
@@ -41,7 +41,7 @@ whiteBracket = filter (not . isSpace) . unwords . fmap (\w -> if needsWrap w the
 -- | Extract nested list (tree) of tokens
 -- e.g. (sp)(A)((0)(0))
 tBrackLex :: String -> Res Tree
-tBrackLex s = if isToken s then Right $ Leaf s else fmap Node $ traverse tBrackLex =<< group s
+tBrackLex s = if isToken s then Right $ LF s else fmap ND $ traverse tBrackLex =<< group s
   where
     group :: String -> Res [String]
     group "" = Right []
@@ -61,13 +61,13 @@ tBrackLex s = if isToken s then Right $ Leaf s else fmap Node $ traverse tBrackL
     isToken w = notElem '(' w && notElem ')' w
 
 showT :: Tree -> String
-showT (Leaf l) = l
-showT (Node ts) = unwords ((bool <$> ((<>")") . ("("<>) . showT) <*> showT <*> isLeaf) <$> ts)
+showT (LF l) = l
+showT (ND ts) = unwords ((bool <$> ((<>")") . ("("<>) . showT) <*> showT <*> isLF) <$> ts)
 
 displayT :: Tree -> String
 displayT = f 0
   where
-    f k (Leaf l) = replicate (2*k) ' ' <> l
-    f k (Node ts) = intercalate "\n" $ (\t -> replicate (2*k) ' ' <> sym k <> "\n" <> f (succ k) t)  <$> ts
+    f k (LF l) = replicate (2*k) ' ' <> l
+    f k (ND ts) = intercalate "\n" $ (\t -> replicate (2*k) ' ' <> sym k <> "\n" <> f (succ k) t)  <$> ts
 
     sym = (`replicate` '*')

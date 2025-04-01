@@ -7,11 +7,11 @@ import Data.Char (isSpace)
 
 -- | Simple lexter that extracts Tree of tokens from multi separator tree specification
 -- >>> lexNSep '.' "0 . 1 . 20 .. 21 . 300 ... 301 .. 310 ... 311"
--- Node [Leaf "0",Leaf "1",Node [Leaf "20",Leaf "21"],Node [Node [Leaf "300",Leaf "301"],Node [Leaf "310",Leaf "311"]]]
+-- ND [LF "0",LF "1",ND [LF "20",LF "21"],ND [ND [LF "300",LF "301"],ND [LF "310",LF "311"]]]
 lexNSep :: Char -> String -> Tree
 lexNSep sep = f 1 . filter (not . isSpace)
   where
-    f k = Node . fmap (\s -> if hasNoSep s then Leaf s else f (succ k) s  ) . splitOnNSeps sep k
+    f k = ND . fmap (\s -> if hasNoSep s then LF s else f (succ k) s  ) . splitOnNSeps sep k
 
     hasNoSep = (sep `notElem`)
 
