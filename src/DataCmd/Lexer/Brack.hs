@@ -9,6 +9,7 @@ import Data.Char (isSpace)
 import Data.Bool (bool)
 import DataCmd.Util
 import DataCmd.Lexer
+import Control.Applicative (Alternative(empty))
 
 -- | Variant of lexBrack that adds brackets to whitespace separation
 -- e.g. sp A (0 0)
@@ -27,10 +28,10 @@ whiteBracket = filter (not . isSpace) . unwords . fmap (\w -> if needsWrap w the
 -- | Extract nested list (tree) of tokens
 -- e.g. (sp)(A)((0)(0))
 lexBrack :: String -> Res Tree
-lexBrack s = if isToken s then Right $ LF s else fmap ND $ traverse lexBrack =<< group s
+lexBrack s = if isToken s then pure $ LF s else fmap ND $ traverse lexBrack =<< group s
   where
     group :: String -> Res [String]
-    group "" = Right []
+    group "" = pure []
     group s = fstGroup s >>= \(fg, rest) -> (fg :) <$> group rest
       where
         fstGroup :: String -> Res (String, String)
@@ -38,10 +39,10 @@ lexBrack s = if isToken s then Right $ LF s else fmap ND $ traverse lexBrack =<<
           where
             close :: Int -> String -> Res (String, String)
             close i (c:s) = if c == ')'
-                            then if i== 0 then Right ("", s)
+                            then if i== 0 then pure ("", s)
                                           else first (c:) <$> close (pred i) s
                             else first (c:) <$> close (bool i (succ i) (c == '(')) s
-            close i _  = Left [["Unexpected ending of input", "Input: " <> cs, "Bracket index: " <> show i]]
-        fstGroup cs = Left [["Group must start with opening bracket '('" , "Input: " <> cs]]
+            close i _  = empty ## ("Unexpected ending of input; Input: " <> cs <> "; Bracket index: " <> show i)
+        fstGroup cs = empty ## ("Group must start with opening bracket '(';  Input: " <> cs)
 
     isToken w = notElem '(' w && notElem ')' w

@@ -5,6 +5,9 @@ import Test.Hspec
 import DataCmd.Lexer
 import DataCmd.Lexer.Brack
 import Control.Monad(forM_)
+import DataCmd.Util (Res(resRes))
+
+shouldResultIn a b = resRes a `shouldBe` resRes b
 
 smplsLexNormal :: [(String, String, Tree)]
 smplsLexNormal =
@@ -42,14 +45,14 @@ specLexNormal =
   describe "lexNormal" $
     forM_ smplsLexNormal $ \(testDesc, raw, tree) ->
       it testDesc $
-        lexNormal raw `shouldBe` Right tree
+        lexNormal raw `shouldResultIn` pure tree
 
 specLexBrack:: Spec
 specLexBrack =
   describe "lexBrack" $
     forM_ smplsLexBrack $ \(testDesc, raw, tree) ->
       it testDesc $
-        lexBrack raw `shouldBe` Right tree
+        lexBrack raw `shouldResultIn` pure tree
 
 spec :: Spec
 spec = do
