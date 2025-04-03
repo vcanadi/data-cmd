@@ -53,20 +53,17 @@ genTP adr = fmap (to @a) . gTP adr (Proxy @(Rep a))
 class GTP (f :: Type -> Type)                            where gTP :: [String] -> Proxy f -> TP (f p)
 instance (GTPΣ f, H f, MW f, Datatype m) => GTP (D1 m f) where gTP adr _ = fmap M1 . gTPΣ (adr<>[gTypNm (Proxy @(D1 m f))]) (DCG.h $ Proxy @f) (mW $ Proxy @f) (Proxy @f)
 
--- Constraints aliases for brevity
---
-
 
 -- | "Generic Tree Parser" logic on generic sum type
 class GTPΣ (f :: Type -> Type)                           where gTPΣ :: [String] -> Int -> Int -> Proxy f -> TP (f p)
 instance (GTPΣ f, GTPΣ g)              => GTPΣ (f :+: g) where gTPΣ adr h w _ t = (L1 <$> gTPΣ adr h w (Proxy @f) t) `resOR` (R1 <$> gTPΣ adr h w (Proxy @g) t)
-instance (GTPπ f, Constructor m, MW f) => GTPΣ (C1 m f)  where gTPΣ adr h w _ t = if h == 1
-                                                                                  then M1 <$> gTPπ adr (mW $ Proxy @f) (Proxy @f) t -- ^ Ignore constructor when type has a single constructor
+instance (GTPΠ f, Constructor m, MW f) => GTPΣ (C1 m f)  where gTPΣ adr h w _ t = if h == 1
+                                                                                  then M1 <$> gTPΠ adr (mW $ Proxy @f) (Proxy @f) t -- ^ Ignore constructor when type has a single constructor
                                                                                   else
                                                                                   case t of
-                                                                                    ND (LF s:ts) | conEq s -> M1 <$> gTPπ adr (mW $ Proxy @f) (Proxy @f) (ND ts)
+                                                                                    ND (LF s:ts) | conEq s -> M1 <$> gTPΠ adr (mW $ Proxy @f) (Proxy @f) (ND ts)
                                                                                     -- | Allow replacing double nest with single in case of enum (w==0)
-                                                                                    (LF s)         | conEq s && w == 0 -> M1 <$> gTPπ adr (mW $ Proxy @f) (Proxy @f) (ND [])
+                                                                                    (LF s)         | conEq s && w == 0 -> M1 <$> gTPΠ adr (mW $ Proxy @f) (Proxy @f) (ND [])
                                                                                                    | otherwise -> parseErr adrWithCon $
                                                                                                                     showT t <> ", left leaf:(" <> s <> ") does not match expected constructor"
                                                                                     _ -> parseErr adrWithCon $ showT t <> ", expecting constructor name in left leaf"
@@ -75,15 +72,15 @@ instance (GTPπ f, Constructor m, MW f) => GTPΣ (C1 m f)  where gTPΣ adr h w _
                                                                                       conEq s = fmap toLower (conName @m Dummy) == fmap toLower s
 
 -- | "Generic Tree Parser" logic on generic product type
-class GTPπ (f :: Type -> Type)                         where gTPπ :: [String] -> Int -> Proxy f -> TP (f p)
-instance (GTPπ f, GTPπ g, MW f) => GTPπ (f :*: g)      where gTPπ adr w _ = \case t@(LF _) -> parseErr (":*:":adr) $ showT t <> ", expecting LF"
+class GTPΠ (f :: Type -> Type)                         where gTPΠ :: [String] -> Int -> Proxy f -> TP (f p)
+instance (GTPΠ f, GTPΠ g, MW f) => GTPΠ (f :*: g)      where gTPΠ adr w _ = \case t@(LF _) -> parseErr (":*:":adr) $ showT t <> ", expecting LF"
                                                                                   (ND ts) ->
-                                                                                         (:*:) <$> gTPπ adr w (Proxy @f) (ND $ take (mW (Proxy @f)) ts)
-                                                                                               <*> gTPπ adr w (Proxy @g) (ND $ drop (mW (Proxy @f)) ts)
-instance (HasTP a, Selector m) => GTPπ (S1 m (Rec0 a)) where gTPπ adr w _ = \case (ND [t])          -> fmap (M1 . K1) (aTP (adr<>[selName @m Dummy]) (Proxy @a) t)
+                                                                                         (:*:) <$> gTPΠ adr w (Proxy @f) (ND $ take (mW (Proxy @f)) ts)
+                                                                                               <*> gTPΠ adr w (Proxy @g) (ND $ drop (mW (Proxy @f)) ts)
+instance (HasTP a, Selector m) => GTPΠ (S1 m (Rec0 a)) where gTPΠ adr w _ = \case (ND [t])          -> fmap (M1 . K1) (aTP (adr<>[selName @m Dummy]) (Proxy @a) t)
                                                                                   t@(LF _) | w == 1 -> fmap (M1 . K1) (aTP (adr<>[selName @m Dummy]) (Proxy @a) t)
                                                                                   t                 -> parseErr (adr<>[selName @m Dummy]) $ showT t <> ", expecting singleton ND"
-instance GTPπ U1                                       where gTPπ _   _ _ = const $ Right U1
+instance GTPΠ U1                                       where gTPΠ _   _ _ = const $ Right U1
 
 parseErr :: [String] -> String -> Res a
 parseErr adr msg = Left [["TP err; type: " <> intercalate "." adr <> ", msg: " <> msg]]
@@ -118,10 +115,10 @@ instance GTRΣ f => GTR (D1 m f) where gTR (M1 x) = gTRΣ False x
 -- | "Generic Tree Renderer" logic on generic sum type
 class GTRΣ (f :: Type -> Type)                     where gTRΣ :: Bool -> f p -> Tree
 instance (GTRΣ f, GTRΣ g)        => GTRΣ (f :+: g) where gTRΣ _ (L1 x) = gTRΣ True x; gTRΣ _ (R1 x) = gTRΣ True x
-instance (GTRπ f, Constructor m) => GTRΣ (C1 m f)  where gTRΣ h' (M1 x) = (\case ND [] -> LF $ conName @m Dummy; y -> ND (bool [] [LF $ conName @m Dummy] h') <> y) $ gTRπ x
+instance (GTRΠ f, Constructor m) => GTRΣ (C1 m f)  where gTRΣ h' (M1 x) = (\case ND [] -> LF $ conName @m Dummy; y -> ND (bool [] [LF $ conName @m Dummy] h') <> y) $ gTRΠ x
 
 -- | "Generic Tree Renderer" logic on generic product type
-class GTRπ (f :: Type -> Type)              where gTRπ :: f p -> Tree
-instance (GTRπ f, GTRπ g) => GTRπ (f :*: g) where gTRπ (x:*:y) = gTRπ x <> gTRπ y
-instance HasTR a => GTRπ (S1 m (Rec0 a))    where gTRπ (M1 (K1 x)) = (\case y@(LF _) -> y; y -> ND [y]) $ aTR x
-instance GTRπ U1                            where gTRπ _ = ND []
+class GTRΠ (f :: Type -> Type)              where gTRΠ :: f p -> Tree
+instance (GTRΠ f, GTRΠ g) => GTRΠ (f :*: g) where gTRΠ (x:*:y) = gTRΠ x <> gTRΠ y
+instance HasTR a => GTRΠ (S1 m (Rec0 a))    where gTRΠ (M1 (K1 x)) = (\case y@(LF _) -> y; y -> ND [y]) $ aTR x
+instance GTRΠ U1                            where gTRΠ _ = ND []
