@@ -1,7 +1,6 @@
 module DataCmd.Lexer.NSepSpec where
 
 import Test.Hspec
-import DataCmd.Lexer
 import DataCmd.Lexer.NSep
 import Control.Monad(forM_)
 

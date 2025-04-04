@@ -2,7 +2,6 @@
 module DataCmd.Lexer.BrackSpec where
 
 import Test.Hspec
-import DataCmd.Lexer
 import DataCmd.Lexer.Brack
 import Control.Monad(forM_)
 import DataCmd.Util (Res(resRes))

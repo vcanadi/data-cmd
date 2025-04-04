@@ -1,5 +1,6 @@
 {- | Lexer that extract Tree by using brackets as branching indicator
 -}
+{-# LANGUAGE LambdaCase #-}
 
 module DataCmd.Lexer.Brack where
 
@@ -8,12 +9,13 @@ import Data.List (isPrefixOf, isSuffixOf)
 import Data.Char (isSpace)
 import Data.Bool (bool)
 import DataCmd.Util
-import DataCmd.Lexer
+-- import DataCmd.Lexer
 import Control.Applicative (Alternative(empty))
+import DataCmd.Tree (T (T, TPrim), TΣ (TΣ), TC (TC), TΠ (TΠ))
 
 -- | Variant of lexBrack that adds brackets to whitespace separation
 -- e.g. sp A (0 0)
-lexNormal :: String -> Res Tree
+lexNormal :: String -> Res T
 lexNormal = lexBrack . whiteBracket
 
 -- | Wrap low level tokens with brackets to interpret things like
@@ -27,8 +29,8 @@ whiteBracket = filter (not . isSpace) . unwords . fmap (\w -> if needsWrap w the
 
 -- | Extract nested list (tree) of tokens
 -- e.g. (sp)(A)((0)(0))
-lexBrack :: String -> Res Tree
-lexBrack s = if isToken s then pure $ LF s else fmap ND $ traverse lexBrack =<< group s
+lexBrack :: String -> Res T
+lexBrack s = if isToken s then pure $ TPrim s else (\case [] -> undefined; (c:ts) -> T . TΣ (TC c) . TΠ  <$> traverse lexBrack ts) =<< group s
   where
     group :: String -> Res [String]
     group "" = pure []
