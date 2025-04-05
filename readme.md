@@ -17,3 +17,15 @@ nix-shell --arg withHLS true
 ### Examples
 
 ### How it works
+
+```mermaid
+graph LR
+A[Raw text] e1@-- Lexer --> B[Tree]
+B -- Delexer --> A
+
+B -- Former --> C[Form]
+C -- Deformer --> B
+
+C -- Parser --> D[Type]
+D -- Deparser --> C
+```

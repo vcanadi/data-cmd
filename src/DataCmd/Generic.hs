@@ -73,7 +73,7 @@ instance (GSHπ f, Constructor m) => GSHΣ (C1 m f)  where gSHΣ us d _ = tab d 
 
 -- Constraints aliases for brevity
 --
--- | "Generic Parser" logic on generic product type
+-- | "Generic Show" logic on generic product type
 class GSHπ (f :: Type -> Type)              where gSHπ :: [String] -> Int -> Proxy f -> String
 instance (GSHπ f, GSHπ g) => GSHπ (f :*: g) where gSHπ us d _ = tab d <> gSHπ us (succ d) (Proxy @f)
                                                                    <> tab d <> "*" <> show d <> "*"  <> gSHπ us (succ d) (Proxy @g)

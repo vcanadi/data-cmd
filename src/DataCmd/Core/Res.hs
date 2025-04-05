@@ -1,6 +1,8 @@
+
 {-# LANGUAGE DeriveFunctor #-}
 
-module DataCmd.Util where
+module DataCmd.Core.Res where
+
 import Control.Applicative ((<|>), Alternative (empty))
 
 -- | Log tree for hierarchical log structure

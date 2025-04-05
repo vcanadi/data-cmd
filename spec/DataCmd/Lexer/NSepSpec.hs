@@ -2,6 +2,7 @@ module DataCmd.Lexer.NSepSpec where
 
 import Test.Hspec
 import DataCmd.Lexer.NSep
+import DataCmd.Lexer.Tree
 import Control.Monad(forM_)
 
 smplsLexNSep :: [(String, String, Tree)]

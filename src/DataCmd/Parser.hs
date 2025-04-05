@@ -3,7 +3,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -12,69 +11,65 @@ module DataCmd.Parser where
 import Data.Kind (Type)
 
 import Data.Proxy
-import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, Rec0, U1(U1), K1(K1), D1, to, Constructor (conName), Datatype, Selector (..), from)
+import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, Rec0, U1(U1), K1(K1), D1, to, Constructor (conName), Datatype, Selector (..))
 import Data.List (intercalate)
 import Text.Read (readEither)
 import Data.Char (toLower)
-import Data.Bool (bool)
--- import DataCmd.Lexer
-import DataCmd.Util
+import DataCmd.Core.Res
 import DataCmd.Generic (GTypNm (gTypNm), TypNm (typNm), MW (mW), H, Dummy (Dummy))
 import qualified DataCmd.Generic as DCG
 import Control.Applicative (Alternative((<|>), empty))
-import DataCmd.Tree (T (TPrim, T), TΣ (TΣ), TC (TC), TΠ (TΠ))
+import DataCmd.Former.Form (F (FPrim, F), FΣ (FΣ), FC (FC), FΠ (FΠ))
+
+-- | Form parsers,
+type FP a = F -> Res a
+type FPΣ a = FΣ -> Res a
+type FPΠ a = FΠ -> Res a
+
+-- | Form parser that matchines leaf and reads content
+readFP :: forall a. (TypNm a, Read a) => [String] -> FP a
+readFP adr (FPrim s) = parseEither adr s
+readFP adr t = parseErr (typNm (Proxy @a):adr) $ ", expecting LF, got: " <> show t
+
+
+class TypNm a => HasF (a :: Type) where aF :: [String] -> Proxy a -> FP a
+instance HasF Bool   where aF adr _ = readFP adr
+instance HasF Int    where aF adr _ = readFP adr
+instance HasF Float  where aF adr _ = readFP adr
+instance HasF Double where aF adr _ = readFP adr
+instance {-# OVERLAPS #-} HasF String where aF adr _ = readFP adr
+instance {-# OVERLAPS #-} HasF a => HasF [a] where aF adr _ (F (FΣ (FC "L") (FΠ cs))) = traverse (aF adr (Proxy @a)) cs
+                                                   aF _   _ _                    = empty ## "Error parsing list"
+instance {-# OVERLAPPABLE #-} (Generic a, GFP (Rep a), GTypNm (Rep a)) => HasF a where aF adr _ = genFP adr
+
+-- | Generic Form Parser
+genFP :: forall a. (Generic a, GFP (Rep a)) => [String] -> FP a
+genFP adr = fmap (to @a) . gFP adr (Proxy @(Rep a))
 
 -- Parser
---
--- | Tree parsers,
-type TP a = T -> Res a
-type TPΣ a = TΣ -> Res a
-type TPΠ a = TΠ -> Res a
 
--- | Tree parser that matchines leaf and reads content
-readTP :: forall a. (TypNm a, Read a) => [String] -> TP a
-readTP adr (TPrim s) = parseEither adr s
-readTP adr t = parseErr (typNm (Proxy @a):adr) $ ", expecting LF, got: " <> show t
+-- | Typeclass "GFP(Generic Form Parser)" whose instances (generic representations) know how to generate Form parser
+class GFP (f :: Type -> Type)                            where gFP :: [String] -> Proxy f -> FP (f p)
+instance (GFPΣ f, H f, MW f, Datatype m) => GFP (D1 m f) where gFP adr _ (F t) = fmap M1 $ gFPΣ (adr<>[gTypNm (Proxy @(D1 m f))]) (DCG.h $ Proxy @f) (mW $ Proxy @f) (Proxy @f) t
 
 
-class TypNm a => HasTP (a :: Type) where aTP :: [String] -> Proxy a -> TP a
-instance HasTP Bool   where aTP adr _ = readTP adr
-instance HasTP Int    where aTP adr _ = readTP adr
-instance HasTP Float  where aTP adr _ = readTP adr
-instance HasTP Double where aTP adr _ = readTP adr
-instance {-# OVERLAPS #-} HasTP String where aTP adr _ = readTP adr
-instance {-# OVERLAPS #-} HasTP a => HasTP [a] where aTP adr _ (T (TΣ (TC "L") (TΠ cs))) = traverse (aTP adr (Proxy @a)) cs
-                                                     aTP _   _ _                    = empty ## "Error parsing list"
-instance {-# OVERLAPPABLE #-} (Generic a, GTP (Rep a), GTypNm (Rep a)) => HasTP a where aTP adr _ = genTP adr
-
--- | Generic Tree Parser
-genTP :: forall a. (Generic a, GTP (Rep a)) => [String] -> TP a
-genTP adr = fmap (to @a) . gTP adr (Proxy @(Rep a))
-
--- Parser
-
--- | Typeclass "GTP(Generic Tree Parser)" whose instances (generic representations) know how to generate tree parser
-class GTP (f :: Type -> Type)                            where gTP :: [String] -> Proxy f -> TP (f p)
-instance (GTPΣ f, H f, MW f, Datatype m) => GTP (D1 m f) where gTP adr _ (T t) = fmap M1 $ gTPΣ (adr<>[gTypNm (Proxy @(D1 m f))]) (DCG.h $ Proxy @f) (mW $ Proxy @f) (Proxy @f) t
-
-
--- | "Generic Tree Parser" logic on generic sum type
-class GTPΣ (f :: Type -> Type)                           where gTPΣ :: [String] -> Int -> Int -> Proxy f -> TPΣ (f p)
-instance (GTPΣ f, GTPΣ g)              => GTPΣ (f :+: g) where gTPΣ adr h w _ t                   = (L1 <$> gTPΣ adr h w (Proxy @f) t) <|> (R1 <$> gTPΣ adr h w (Proxy @g) t)
-instance (GTPΠ f, Constructor m, MW f) => GTPΣ (C1 m f)  where gTPΣ adr h w _ (TΣ (TC s) ts) | conEq s = M1 <$> gTPΠ adr (mW $ Proxy @f) (Proxy @f) ts
+-- | "Generic Form Parser" logic on generic sum type
+class GFPΣ (f :: Type -> Type)                           where gFPΣ :: [String] -> Int -> Int -> Proxy f -> FPΣ (f p)
+instance (GFPΣ f, GFPΣ g)              => GFPΣ (f :+: g) where gFPΣ adr h w _ t                   = (L1 <$> gFPΣ adr h w (Proxy @f) t) <|> (R1 <$> gFPΣ adr h w (Proxy @g) t)
+instance (GFPΠ f, Constructor m, MW f) => GFPΣ (C1 m f)  where gFPΣ adr h w _ (FΣ (FC s) ts) | conEq s = M1 <$> gFPΠ adr (mW $ Proxy @f) (Proxy @f) ts
                                                                                     where
                                                                                       conEq s = fmap toLower (conName @m Dummy) == fmap toLower s
 
--- | "Generic Tree Parser" logic on generic product type
-class GTPΠ (f :: Type -> Type)                         where gTPΠ :: [String] -> Int -> Proxy f -> TPΠ (f p)
-instance (GTPΠ f, GTPΠ g, MW f) => GTPΠ (f :*: g)      where gTPΠ adr w _ (TΠ ts) = (:*:) <$> gTPΠ adr w (Proxy @f) (TΠ $ take (mW (Proxy @f)) ts)
-                                                                                        <*> gTPΠ adr w (Proxy @g) (TΠ $ drop (mW (Proxy @f)) ts)
-instance (HasTP a, Selector m) => GTPΠ (S1 m (Rec0 a)) where gTPΠ adr w _ (TΠ [t]) = fmap (M1 . K1) (aTP (adr<>[selName @m Dummy]) (Proxy @a) t)
-                                                             gTPΠ adr _ _ t        = parseErr (adr<>[selName @m Dummy]) $ show t <> ", expecting singleton TΠ"
-instance GTPΠ U1                                       where gTPΠ _   _ _ = const $ pure U1
+-- | "Generic Form Parser" logic on generic product type
+class GFPΠ (f :: Type -> Type)                         where gFPΠ :: [String] -> Int -> Proxy f -> FPΠ (f p)
+instance (GFPΠ f, GFPΠ g, MW f) => GFPΠ (f :*: g)      where gFPΠ adr w _ (FΠ ts) = (:*:) <$> gFPΠ adr w (Proxy @f) (FΠ $ take (mW (Proxy @f)) ts)
+                                                                                        <*> gFPΠ adr w (Proxy @g) (FΠ $ drop (mW (Proxy @f)) ts)
+instance (HasF a, Selector m) => GFPΠ (S1 m (Rec0 a)) where gFPΠ adr w _ (FΠ [t]) = fmap (M1 . K1) (aF (adr<>[selName @m Dummy]) (Proxy @a) t)
+                                                            gFPΠ adr _ _ t        = parseErr (adr<>[selName @m Dummy]) $ show t <> ", expecting singleton FΠ"
+instance GFPΠ U1                                       where gFPΠ _   _ _ = const $ pure U1
 
 parseErr :: [String] -> String -> Res a
-parseErr adr msg = empty ## ("TP err; " <> intercalate "." adr <> "msg: " <> msg)
+parseErr adr msg = empty ## ("FP err; " <> intercalate "." adr <> "msg: " <> msg)
 
 parseEither :: Read a => [String] -> String -> Res a
 parseEither adr w = case readEither w of

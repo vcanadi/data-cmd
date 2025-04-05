@@ -3,8 +3,9 @@ module DataCmd.Lexer.BrackSpec where
 
 import Test.Hspec
 import DataCmd.Lexer.Brack
+import DataCmd.Lexer.Tree
 import Control.Monad(forM_)
-import DataCmd.Util (Res(resRes))
+import DataCmd.Core.Res(Res(resRes))
 
 shouldResultIn a b = resRes a `shouldBe` resRes b
 
