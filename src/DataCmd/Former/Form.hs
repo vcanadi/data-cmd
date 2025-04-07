@@ -7,6 +7,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 module DataCmd.Former.Form where
 
@@ -25,6 +26,9 @@ newtype FC = FC String deriving (Show, Eq)
 data F = FPrim String | F FΣ deriving (Show, Eq)
 data FΣ = FΣ FC FΠ deriving (Show, Eq)
 newtype FΠ = FΠ [F] deriving (Show, Eq)
+
+pattern (:..) :: String -> [F] -> F
+pattern (:..) c ts = F (FΣ (FC c) (FΠ ts))
 
 instance Semigroup FΠ where FΠ ps0 <> FΠ ps1 = FΠ $ ps0 <> ps1
 
@@ -56,3 +60,4 @@ class GFΠ (f :: Type -> Type)            where gFΠ :: f p -> Res FΠ
 instance (GFΠ f, GFΠ g) => GFΠ (f :*: g) where gFΠ (x:*:y) = (gFΠ x ## "FST") <> (gFΠ y ## "SND")
 instance HasF a => GFΠ (S1 m (Rec0 a))   where gFΠ (M1 (K1 x)) = FΠ . pure <$> aF x ## "Type"
 instance GFΠ U1                          where gFΠ _ = pure $ FΠ []
+

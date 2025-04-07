@@ -1,3 +1,5 @@
+{- | Utilities for generic programming -}
+
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE UndecidableInstances #-}

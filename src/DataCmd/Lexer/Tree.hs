@@ -1,7 +1,6 @@
-
 {-# LANGUAGE LambdaCase #-}
 
-{- | 'Lexer' or whatever. Basically, a first step in parsing raw text into some type. Raw string is converted into a intermediate Tree type (tree of tokens/words), which are then parsed by DataCmd.Parser
+{- | Tree type (tree of tokens/words), which are then parsed by DataCmd.Parser
 -}
 
 module DataCmd.Lexer.Tree where

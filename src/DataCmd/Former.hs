@@ -1,6 +1,4 @@
-{-# OverloadedStrings #-}
-{- | Extract form from tree
--}
+{- | Extract type form from tree -}
 
 module DataCmd.Former where
 import DataCmd.Core.Res (Res, (##))

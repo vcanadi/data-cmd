@@ -1,34 +1,54 @@
+{-# LANGUAGE PatternSynonyms #-}
 module DataCmd.ParserSpec where
 
 import Test.Hspec
 import DataCmd.Parser
-import DataCmd.Lexer.Tree
-import DataCmd.Lexer.BrackSpec
 import Data.Proxy (Proxy(Proxy))
 import GHC.Generics (Generic)
 import DataCmd.Core.Res(Res(resRes))
+import DataCmd.Former.Form (F(..), FΣ (FΣ), FC (FC), FΠ (FΠ), pattern (:..))
+
+shouldResultIn :: (Show t, Eq t) => Res t -> t -> Expectation
+shouldResultIn a b = resRes a `shouldBe` Just b
+
+
+data Dir = Dir Int Int
+ deriving (Generic, Show, Eq)
+
+data Prod = Prod {prodA :: Int, prodB :: [Float] }
+ deriving (Generic, Show, Eq)
 
 data Act
  = NoAct
- | Move { moveDir :: (Int, Int) }
+ | MoveDir { moveDir  :: Dir }
  | MoveX { moveX :: Int }
  | Spawn { spawnLoc :: (Int, Int), spawnName :: String  }
  deriving (Generic, Show, Eq)
 
 spec :: Spec
 spec = do
-  pure ()
-  -- describe "aTP" $ do
-  --   it "parses NoAct correctly"  $
-  --     aTP [] (Proxy @Act) (T $ TΣ (TC "NoAct") $ TΠ [])  `shouldResultIn` pure NoAct
+  -- describe "genFP" $ do
+    -- it "parses primitive correctly"  $
+    --   genFP [] (FF "1" [])  `shouldResultIn` 1
 
-  --   it "parses Move correctly"  $
-  --     aTP [] (Proxy @Act) (T $ TΣ (TC "Move") $ TΠ [TPrim "1", TPrim "2"])  `shouldResultIn` pure (Move (1,2))
+  describe "aF" $ do
 
-  --   it "parses MoveX correctly"  $
-  --     aTP [] (Proxy @Act) (T $ TΣ (TC "Move") $ TΠ [TPrim "1" ])  `shouldResultIn` pure (MoveX 1)
+    it "parses List correctly" $
+      aF (Proxy @[Int]) ("L" :.. [FPrim "1", FPrim "2"]) `shouldResultIn` [1, 2]
 
-  --   it "parses Spawn correctly"  $
-  --     aTP [] (Proxy @Act) (T $ TΣ (TC "Spawn") $ TΠ [ T $ TΣ (TC "1") $ TΠ [TPrim "2"], TPrim "\"Player0\""])  `shouldResultIn` pure (Spawn (1,2) "Player0")
+    -- it "parses Prod correctly" $
+    --   aF (Proxy @Prod) ("Prod" :.. [FPrim "1", FF "[]" [FPrim "2", FPrim "3"]]) `shouldResultIn` Prod 1 [2, 3]
+
+    it "parses NoAct correctly"  $
+      aF (Proxy @Act) ("NoAct" :.. [])  `shouldResultIn` NoAct
+
+    it "parses Move correctly"  $
+      aF (Proxy @Act) ("MoveDir" :.. ["Dir" :.. [FPrim "1", FPrim "2"]])  `shouldResultIn` MoveDir (Dir 1 2)
+
+    it "parses MoveX correctly"  $
+      aF (Proxy @Act) ("MoveX" :.. [FPrim "1" ])  `shouldResultIn` MoveX 1
+
+    it "parses Spawn correctly"  $
+      aF (Proxy @Act) ("Spawn" :.. [ "(,)" :.. [FPrim "1", FPrim "2"], FPrim "\"Player0\""])  `shouldResultIn` Spawn (1,2) "Player0"
 
 

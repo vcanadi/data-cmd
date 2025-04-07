@@ -7,7 +7,8 @@ import DataCmd.Lexer.Tree
 import Control.Monad(forM_)
 import DataCmd.Core.Res(Res(resRes))
 
-shouldResultIn a b = resRes a `shouldBe` resRes b
+shouldResultIn :: (Show t, Eq t) => Res t -> t -> Expectation
+shouldResultIn a b = resRes a `shouldBe` Just b
 
 smplsLexNormal :: [(String, String, Tree)]
 smplsLexNormal =
@@ -45,14 +46,14 @@ specLexNormal =
   describe "lexNormal" $
     forM_ smplsLexNormal $ \(testDesc, raw, tree) ->
       it testDesc $
-        lexNormal raw `shouldResultIn` pure tree
+        lexNormal raw `shouldResultIn` tree
 
 specLexBrack:: Spec
 specLexBrack =
   describe "lexBrack" $
     forM_ smplsLexBrack $ \(testDesc, raw, tree) ->
       it testDesc $
-        lexBrack raw `shouldResultIn` pure tree
+        lexBrack raw `shouldResultIn` tree
 
 spec :: Spec
 spec = do

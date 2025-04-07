@@ -1,5 +1,6 @@
 {- | Simple lexer that extracts Tree of tokens from multi separator tree specification
 -}
+{-# LANGUAGE LambdaCase #-}
 
 module DataCmd.Lexer.NSep where
 
@@ -12,7 +13,7 @@ import Data.Char (isSpace)
 lexNSep :: Char -> String -> Tree
 lexNSep sep = f 1 . filter (not . isSpace)
   where
-    f k = ND . fmap (\s -> if hasNoSep s then LF s else f (succ k) s  ) . splitOnNSeps sep k
+    f k = (\case [s] | hasNoSep s -> LF s; ss -> ND $ fmap (f (succ k)) ss ) . splitOnNSeps sep k
 
     hasNoSep = (sep `notElem`)
 
