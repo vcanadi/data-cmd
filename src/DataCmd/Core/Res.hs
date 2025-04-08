@@ -1,4 +1,4 @@
-
+{- | Result type of various transformations -}
 {-# LANGUAGE DeriveFunctor #-}
 
 module DataCmd.Core.Res where
@@ -11,7 +11,7 @@ data LogT
   | LogOR [LogT]
   | LogSEQ [LogT]
   | LogMsg String
-  | LogLeaf
+  | LogEmpty
   deriving (Eq)
 
 instance Show LogT where
@@ -19,7 +19,7 @@ instance Show LogT where
   show (LogOR ls)   = "OR" <> show ls
   show (LogSEQ ls)  = "SEQ" <> show ls
   show (LogMsg msg) = msg
-  show LogLeaf      = "LogLeaf"
+  show LogEmpty      = "LogEmpty"
 
 instance Semigroup LogT where
   LogAND ls0 <> LogAND ls1 = LogAND $ ls0 <> ls1
@@ -27,7 +27,9 @@ instance Semigroup LogT where
   l0         <> LogAND ls1 = LogAND $ l0 : ls1
   l0 <> l1 = LogAND [l0, l1]
 
-instance Monoid LogT where mempty = LogLeaf
+instance Monoid LogT where
+  mempty = LogEmpty
+
 
 logOR :: LogT -> LogT -> LogT
 LogOR ls0 `logOR` LogOR ls1  = LogOR $ ls0 <> ls1
@@ -40,6 +42,21 @@ LogSEQ ls0 `logSEQ` LogSEQ ls1 = LogSEQ $ ls0 <> ls1
 LogSEQ ls0 `logSEQ` l1         = LogSEQ $ ls0 <> [l1]
 l0        `logSEQ` LogSEQ ls1  = LogSEQ $ l0 : ls1
 l0        `logSEQ` l1          = LogSEQ [l0, l1]
+
+
+showLog :: LogT -> String
+showLog = f 0
+  where
+    f k (LogAND ls)  = sp k <> "AND [\n" <> unlines (f (succ k) <$> ls)
+                    <> sp k <> "\n]"
+    f k (LogOR ls)   = sp k <> "OR  [\n" <> unlines (f (succ k) <$> ls)
+                    <> sp k <> "\n]"
+    f k (LogSEQ ls)  = sp k <> "SEQ [\n" <> unlines (f (succ k) <$> ls)
+                    <> sp k <> "\n]"
+    f k (LogMsg msg) = sp k <> msg
+    f k LogEmpty      = sp k <> "()"
+
+    sp k = replicate k ' '
 
 -- | Possible result and log
 data Res t = Res
@@ -74,3 +91,7 @@ infixl 3 .#
 -- | Create Res with log message
 (.#) :: a -> String -> Res a
 a .# msg = Res (LogMsg msg) $ Just a
+
+showRes :: Show t => Res t -> String
+showRes (Res l r) = showLog l <> "\n" <> show r
+
