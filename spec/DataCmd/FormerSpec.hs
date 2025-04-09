@@ -4,7 +4,7 @@ module DataCmd.FormerSpec where
 
 
 import Test.Hspec
-import DataCmd.Former.Form (pattern (:..), F (FPrim))
+import DataCmd.Former.Form (pattern (:..), F , pattern FPrim)
 import Control.Monad(forM_)
 import DataCmd.Lexer.Tree (Tree (ND, LF))
 import DataCmd.Former (treeForm)
@@ -16,10 +16,10 @@ smplsFormer =
    ( "works on simple example"
     , ND [LF "0",LF "1",ND [LF "20",LF "21"],ND [LF "300",ND [LF "310",LF "311"]]]
     , "0" :..
-      [ "1" :.. []
-      , "20" :.. ["21" :.. []]
+      [ FPrim "1"
+      , "20" :.. [FPrim "21"]
       , "300" :..
-        [ "310" :.. ["311" :.. []]
+        [ "310" :.. [FPrim "311"]
         ]
       ]
     )

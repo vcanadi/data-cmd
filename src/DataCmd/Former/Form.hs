@@ -23,12 +23,14 @@ data X2 = X20 | X21 Int | X22 Int Float deriving (Show, Eq, Generic)
 newtype FC = FC String deriving (Show, Eq)
 
 -- | Simplified generic type representation as a value-level tree
-data F = FPrim String | F FΣ deriving (Show, Eq)
-data FΣ = FΣ FC FΠ deriving (Show, Eq)
+data F = FΣ FC FΠ deriving (Show, Eq)
 newtype FΠ = FΠ [F] deriving (Show, Eq)
 
+pattern FPrim :: String -> F
+pattern FPrim c = FΣ (FC c) (FΠ [])
+
 pattern (:..) :: String -> [F] -> F
-pattern (:..) c ts = F (FΣ (FC c) (FΠ ts))
+pattern (:..) c ts = FΣ (FC c) (FΠ ts)
 
 instance Semigroup FΠ where FΠ ps0 <> FΠ ps1 = FΠ $ ps0 <> ps1
 
@@ -39,7 +41,7 @@ instance HasF Int    where aF x = FPrim (show x) .# "Int"
 instance HasF Float  where aF x = FPrim (show x) .# "Float"
 instance HasF Double where aF x = FPrim (show x) .# "Double"
 instance {-# OVERLAPS #-} HasF String where aF s = FPrim s .# "String" -- ^ String list is an exception as literal
-instance {-# OVERLAPS #-} HasF a => HasF [a] where aF xs = F . FΣ (FC "L") . FΠ <$> traverse aF xs ## "List" -- ^ List is product of n fields instead of binary constructed object
+instance {-# OVERLAPS #-} HasF a => HasF [a] where aF xs = FΣ (FC "L") . FΠ <$> traverse aF xs ## "List" -- ^ List is product of n fields instead of binary constructed object
 instance {-# OVERLAPPABLE #-} (Generic a, GF (Rep a)) => HasF a where aF x = genF x ## "Gen"
 
 -- | Generic F renderer
@@ -48,10 +50,10 @@ genF = gF . from
 
 -- | Typeclass "GF(Generic F)" whose instances (generic representations) know how to render to Tree
 class GF (f :: Type -> Type)  where gF :: f p -> Res F
-instance GFΣ f => GF (D1 m f) where gF (M1 x) = F <$> gFΣ False x ## "F"
+instance GFΣ f => GF (D1 m f) where gF (M1 x) = gFΣ False x ## "F"
 
 -- | "Generic Tree Renderer" logic on generic sum type
-class GFΣ (f :: Type -> Type)                   where gFΣ :: Bool -> f p -> Res FΣ
+class GFΣ (f :: Type -> Type)                   where gFΣ :: Bool -> f p -> Res F
 instance (GFΣ f, GFΣ g)        => GFΣ (f :+: g) where gFΣ _ (L1 x) = gFΣ True x ## "LHS"; gFΣ _ (R1 x) = gFΣ True x ## "RHS"
 instance (GFΠ f, Constructor m) => GFΣ (C1 m f) where gFΣ _ (M1 x) = FΣ (FC $ conName @m Dummy) <$> gFΠ x ## "C"
 
