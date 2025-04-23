@@ -4,7 +4,7 @@
 
 module DataCmd.Lexer.NSep where
 
-import DataCmd.Lexer.Tree
+import DataCmd.Core.Tree
 import Data.Char (isSpace)
 
 -- >>> lexNSep '.' "0 . 1 . 20 .. 21 . 300 ... 301 .. 310 ... 311"

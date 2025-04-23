@@ -3,10 +3,11 @@
 
 module DataCmd.Lexer where
 
-import DataCmd.Lexer.Tree
+import DataCmd.Core.Tree
 import DataCmd.Core.Trans (HasTrans (trans))
 import DataCmd.Lexer.NSep (lexNSep)
 import DataCmd.Lexer.Brack (lexBrack, lexNormal)
+import DataCmd.Core.Res ((#<), (#><))
 
 -- Raw input wrapped into newtypes indicating what type of lexer should be used on it in HasTrans instance
 
@@ -15,7 +16,7 @@ import DataCmd.Lexer.Brack (lexBrack, lexNormal)
 newtype DotLexer = DotLexer { dotLexerRawString :: String }
 
 instance HasTrans DotLexer Tree where
-  trans = pure . lexNSep '.' . dotLexerRawString
+  trans raw = pure (lexNSep '.' $ dotLexerRawString raw) #>< "Dot Lexer"
 
 
 -- | Use BrackLexer

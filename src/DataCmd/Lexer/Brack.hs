@@ -8,7 +8,7 @@ import Data.List (isPrefixOf, isSuffixOf)
 import Data.Char (isSpace)
 import Data.Bool (bool)
 import DataCmd.Core.Res
-import DataCmd.Lexer.Tree
+import DataCmd.Core.Tree
 import Control.Applicative (Alternative(empty))
 
 -- | Variant of lexBrack that adds brackets to whitespace separation
@@ -42,7 +42,7 @@ lexBrack s = if isToken s then pure $ LF s else fmap ND $ traverse lexBrack =<< 
                             then if i== 0 then pure ("", s)
                                           else first (c:) <$> close (pred i) s
                             else first (c:) <$> close (bool i (succ i) (c == '(')) s
-            close i _  = empty ## ("Unexpected ending of input; Input: " <> cs <> "; Bracket index: " <> show i)
-        fstGroup cs = empty ## ("Group must start with opening bracket '(';  Input: " <> cs)
+            close i _  = empty #< ("Unexpected ending of input; Input: " <> cs <> "; Bracket index: " <> show i)
+        fstGroup cs = empty #< ("Group must start with opening bracket '(';  Input: " <> cs)
 
     isToken w = notElem '(' w && notElem ')' w

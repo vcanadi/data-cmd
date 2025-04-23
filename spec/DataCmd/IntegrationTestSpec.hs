@@ -4,14 +4,14 @@ module DataCmd.IntegrationTestSpec where
 
 import Test.Hspec
 -- import DataCmd.ParserSpec
-import DataCmd.Former.Form
+import DataCmd.Core.Form
 import DataCmd.Former ()
 import Data.Proxy (Proxy(Proxy))
 import GHC.Generics (Generic)
 import Control.Monad((<=<), (>=>))
 import DataCmd.Core.Res (Res(resRes))
 import DataCmd.Lexer (DotLexer (DotLexer), BrackLexer (BrackLexer), NormalLexer(NormalLexer))
-import DataCmd.Lexer.Tree (Tree)
+import DataCmd.Core.Tree (Tree)
 import DataCmd.Core.Trans (HasTrans(trans))
 import Control.Arrow ((>>>))
 import DataCmd.Parser (HasFP(aFP))

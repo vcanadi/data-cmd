@@ -2,14 +2,14 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module DataCmd.Former where
-import DataCmd.Core.Res (Res, (##))
-import DataCmd.Lexer.Tree (Tree (ND, LF))
-import DataCmd.Former.Form (F (..), FC (FC), FΠ (FΠ) )
+import DataCmd.Core.Res (Res, (#<))
+import DataCmd.Core.Tree (Tree (ND, LF))
+import DataCmd.Core.Form (F (..), FC (FC), FΠ (FΠ) )
 import Control.Applicative (Alternative(empty))
 import DataCmd.Core.Trans (HasTrans (trans))
 
 formerErr :: String -> Res a
-formerErr msg = empty ## ("Former error: " <> msg)
+formerErr msg = empty #< ("Former error: " <> msg)
 
 treeForm :: Tree -> Res F
 treeForm (ND []) = formerErr "Not expecting empty node"

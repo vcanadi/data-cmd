@@ -3,7 +3,7 @@
 {- | Tree type (tree of tokens/words), which are then parsed by DataCmd.Parser
 -}
 
-module DataCmd.Lexer.Tree where
+module DataCmd.Core.Tree where
 
 import Data.List (intercalate)
 import Data.Bool (bool)

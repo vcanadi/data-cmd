@@ -4,9 +4,9 @@ module DataCmd.FormerSpec where
 
 
 import Test.Hspec
-import DataCmd.Former.Form (pattern (:..), F , pattern FPrim)
+import DataCmd.Core.Form (pattern (:..), F , pattern FPrim)
 import Control.Monad(forM_)
-import DataCmd.Lexer.Tree (Tree (ND, LF))
+import DataCmd.Core.Tree (Tree (ND, LF))
 import DataCmd.Former (treeForm)
 import DataCmd.Core.Res (Res(resRes))
 
