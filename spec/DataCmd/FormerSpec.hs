@@ -7,7 +7,7 @@ import Test.Hspec
 import DataCmd.Core.Form (pattern (:..), F , pattern FPrim)
 import Control.Monad(forM_)
 import DataCmd.Core.Tree (Tree (ND, LF))
-import DataCmd.Former (treeForm)
+import DataCmd.Core.Tree.TreeToForm (treeForm)
 import DataCmd.Core.Res (Res(resRes))
 
 smplsFormer :: [(String, Tree, F)]

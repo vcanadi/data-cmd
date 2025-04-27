@@ -2,10 +2,13 @@
 -}
 {-# LANGUAGE LambdaCase #-}
 
-module DataCmd.Lexer.NSep where
+module DataCmd.Core.Raw.NSep.RawToTree where
 
 import DataCmd.Core.Tree
 import Data.Char (isSpace)
+import DataCmd.Core.Trans (HasTrans (trans))
+import DataCmd.Core.Res ((#<))
+import DataCmd.Lexer.Brack (lexNormal)
 
 -- >>> lexNSep '.' "0 . 1 . 20 .. 21 . 300 ... 301 .. 310 ... 311"
 -- ND [LF "0",LF "1",ND [LF "20",LF "21"],ND [ND [LF "300",LF "301"],ND [LF "310",LF "311"]]]
@@ -28,3 +31,15 @@ splitOnNSeps sep k = f Nothing [] []
                 | x /= sep && l' /= k -> f Nothing          (x:(replicate l' sep <> acc)) accs               xs
                 | otherwise           -> f Nothing          []                            (reverse acc:accs) (x:xs)
 
+
+-- | Use NSepLexer with '.' separator
+newtype DotLexer = DotLexer { dotLexerRawString :: String }
+
+instance HasTrans DotLexer Tree where
+  trans raw = pure (lexNSep '.' $ dotLexerRawString raw) #< "Dot Lexer"
+
+-- | Use NormaLexer
+newtype NormalLexer = NormalLexer { normalLexerRawString :: String }
+
+instance HasTrans NormalLexer Tree where
+  trans = lexNormal . normalLexerRawString

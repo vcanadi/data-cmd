@@ -1,7 +1,9 @@
 {- | Extract type Form from Tree -}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
-module DataCmd.Former where
+module DataCmd.Core.Tree.TreeToForm where
+
 import DataCmd.Core.Res (Res, (#<))
 import DataCmd.Core.Tree (Tree (ND, LF))
 import DataCmd.Core.Form (F (..), FC (FC), FΠ (FΠ) )
@@ -13,9 +15,10 @@ formerErr msg = empty #< ("Former error: " <> msg)
 
 treeForm :: Tree -> Res F
 treeForm (ND []) = formerErr "Not expecting empty node"
-treeForm (ND (LF c:ts)) =  FΣ (FC c) . FΠ <$> traverse treeForm ts
-treeForm (LF c) = pure $ FΣ (FC c) $ FΠ []
+treeForm n@(ND (LF c:ts)) =  FΣ (FC c) . FΠ <$> traverse treeForm ts #< ("Former node " <> show n)
+treeForm n@(LF c) = pure (FΣ (FC c) $ FΠ []) #< ("Former leaf " <> show n)
+
 treeForm _ = formerErr  "Expecting constructor name"
 
 instance HasTrans Tree F
-  where trans = treeForm
+  where trans t = treeForm t #< "Former"

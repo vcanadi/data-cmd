@@ -16,7 +16,8 @@ default-extensions:
 
 dependencies:
   - base
-  - pretty-simple
+  - QuickCheck
+  - generic-arbitrary
 
 library:
   source-dirs: src
@@ -27,6 +28,8 @@ tests:
     - base
     - hspec
     - data-cmd
+    - QuickCheck
+    - generic-arbitrary
     main: Spec.hs
     source-dirs: spec
 version: 0.1.0.0

@@ -5,7 +5,8 @@ module DataCmd.IntegrationTestSpec where
 import Test.Hspec
 -- import DataCmd.ParserSpec
 import DataCmd.Core.Form
-import DataCmd.Former ()
+import DataCmd.Core.Tree.TreeToForm
+import DataCmd.Core.Form.FormToType
 import Data.Proxy (Proxy(Proxy))
 import GHC.Generics (Generic)
 import Control.Monad((<=<), (>=>))
@@ -14,7 +15,6 @@ import DataCmd.Lexer (DotLexer (DotLexer), BrackLexer (BrackLexer), NormalLexer(
 import DataCmd.Core.Tree (Tree)
 import DataCmd.Core.Trans (HasTrans(trans))
 import Control.Arrow ((>>>))
-import DataCmd.Parser (HasFP(aFP))
 
 
 data Dir = Dir Int Int
@@ -48,7 +48,7 @@ spec = do
       f "MoveX . 1"  `shouldSatisfy` (resRes >>> (== Just (MoveX 1)))
 
     it "parses Spawn correctly"  $
-      f "Spawn . (,) .. 1 .. 2 . \"Player0\"" `shouldSatisfy` (resRes >>> (== Just (Spawn (1,2) "Player0")))
+      f "Spawn . L .. 1 .. 2 . Player0" `shouldSatisfy` (resRes >>> (== Just (Spawn (1,2) "Player0")))
 
 
   describe "aTP  with lexBrack" $ do
@@ -65,8 +65,8 @@ spec = do
     it "parses MoveX correctly"  $
       f "(MoveX)(1)"  `shouldSatisfy` (resRes >>> (== Just (MoveX 1)))
 
-    -- it "parses Spawn correctly"  $
-    --   f "(Spawn)(((,))(1)(2))(\"Player0\")" `shouldSatisfy` (resRes >>> (== Just (Spawn (1,2) "Player0")))
+    it "parses Spawn correctly"  $
+      f "(Spawn)((L)(1)(2))(Player0)" `shouldSatisfy` (resRes >>> (== Just (Spawn (1,2) "Player0")))
 
   describe "aTP  with lexNorma" $ do
     let f = NormalLexer

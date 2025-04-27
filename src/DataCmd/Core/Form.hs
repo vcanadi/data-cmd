@@ -7,26 +7,33 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module DataCmd.Core.Form where
 
 import Data.Kind (Type)
 
-import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, Rec0, K1(K1), D1, Constructor (conName), from, U1)
+import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, Rec0, K1(K1), D1, Constructor (conName), from, U1, Selector (selName))
 import DataCmd.Generic (Dummy (Dummy))
-import DataCmd.Core.Res(Res, (#<), (.#))
+import DataCmd.Core.Res(Res, (#<), (.#), (#+<), (#*<))
 import Data.Proxy (Proxy (Proxy))
+import DataCmd.Core.Trans (HasTrans (trans))
+import Control.Category ((>>>))
+import Test.QuickCheck (Arbitrary (arbitrary))
+import Test.QuickCheck.Arbitrary.Generic (genericArbitrary)
 import Control.Applicative ((<|>))
 
 
 -- Value level
 --
 -- | Tree product constructor
-newtype FC = FC String deriving (Show, Eq)
+newtype FC = FC String deriving (Show, Eq, Generic)
+
 
 -- | Simplified generic value representation as a value-level tree
-data F = FΣ FC FΠ deriving (Show, Eq)
-newtype FΠ = FΠ [F] deriving (Show, Eq)
+data F = FΣ FC FΠ deriving (Eq, Generic)
+newtype FΠ = FΠ [F] deriving (Show, Eq, Generic)
+
 
 pattern FPrim :: String -> F
 pattern FPrim c = FΣ (FC c) (FΠ [])
@@ -34,40 +41,16 @@ pattern FPrim c = FΣ (FC c) (FΠ [])
 pattern (:..) :: String -> [F] -> F
 pattern (:..) c ts = FΣ (FC c) (FΠ ts)
 
+-- | More concise Show instance that looks like pattern synonym construction
+instance Show F where
+  show (FPrim c) = "FPrim " <> c
+  show (c :.. ps) = show c <> " :.. " <> show ps
+
 instance Semigroup FΠ where FΠ ps0 <> FΠ ps1 = FΠ $ ps0 <> ps1
 
--- | Types whose values can be rendered to F
-class HasF (a :: Type) where aF :: a -> Res F
-instance HasF Bool   where aF x = FPrim (show x) .# "Bool"
-instance HasF Int    where aF x = FPrim (show x) .# "Int"
-instance HasF Float  where aF x = FPrim (show x) .# "Float"
-instance HasF Double where aF x = FPrim (show x) .# "Double"
-instance {-# OVERLAPS #-} HasF String where aF s = FPrim s .# "String" -- ^ String list is an exception as literal
-instance {-# OVERLAPS #-} HasF a => HasF [a] where aF xs = FΣ (FC "L") . FΠ <$> traverse aF xs #< "List" -- ^ List is product of n fields instead of binary constructed object
-instance {-# OVERLAPPABLE #-} (Generic a, GF (Rep a)) => HasF a where aF x = genF x #< "Gen"
-
--- | Generic F renderer
-genF :: forall a. (Generic a, GF (Rep a)) => a -> Res F
-genF = gF . from
-
--- | Typeclass "GF(Generic F)" whose instances (generic representations) know how to render to Tree
-class GF (f :: Type -> Type)  where gF :: f p -> Res F
-instance GFΣ f => GF (D1 m f) where gF (M1 x) = gFΣ False x #< "F"
-
--- | "Generic Tree Renderer" logic on generic sum type
-class GFΣ (f :: Type -> Type)                   where gFΣ :: Bool -> f p -> Res F
-instance (GFΣ f, GFΣ g)        => GFΣ (f :+: g) where gFΣ _ (L1 x) = gFΣ True x #< "LHS"; gFΣ _ (R1 x) = gFΣ True x #< "RHS"
-instance (GFΠ f, Constructor m) => GFΣ (C1 m f) where gFΣ _ (M1 x) = FΣ (FC $ conName @m Dummy) <$> gFΠ x #< "C"
-
--- | "Generic Tree Renderer" logic on generic product type
-class GFΠ (f :: Type -> Type)            where gFΠ :: f p -> Res FΠ
-instance (GFΠ f, GFΠ g) => GFΠ (f :*: g) where gFΠ (x:*:y) = (gFΠ x #< "FST") <> (gFΠ y #< "SND")
-instance HasF a => GFΠ (S1 m (Rec0 a))   where gFΠ (M1 (K1 x)) = FΠ . pure <$> aF x #< "Type"
-instance GFΠ U1                          where gFΠ _ = pure $ FΠ []
-
-
-
-
+instance Arbitrary FC where arbitrary = genericArbitrary
+instance Arbitrary FΠ where arbitrary = genericArbitrary
+instance Arbitrary F where arbitrary = genericArbitrary
 
 -- Type level
 
@@ -75,7 +58,7 @@ instance GFΠ U1                          where gFΠ _ = pure $ FΠ []
 newtype FTyC = FTyC String deriving (Show, Eq)
 
 -- | Simplified generic type representation as a value-level tree
-data FTy = FTyΣ [(FTyC, FTyΠ)] deriving (Show, Eq)
+newtype FTy = FTyΣ [(FTyC, FTyΠ)] deriving (Show, Eq)
 newtype FTyΠ = FTyΠ [FTy] deriving (Show, Eq)
 
 instance Semigroup FTyΠ where FTyΠ ps0 <> FTyΠ ps1 = FTyΠ $ ps0 <> ps1
@@ -106,11 +89,11 @@ instance GFTyΣ f => GFTy (D1 m f) where gFTy _ = FTyΣ <$> gFTyΣ False (Proxy 
 
 -- | "Generic Tree Renderer" logic on generic sum type
 class GFTyΣ (f :: Type -> Type)                      where gFTyΣ :: Bool -> Proxy f -> Res [(FTyC, FTyΠ)]
-instance (GFTyΣ f, GFTyΣ g)       => GFTyΣ (f :+: g) where gFTyΣ _ _ = (gFTyΣ True (Proxy @f) #< "L1") <> (gFTyΣ True (Proxy @g) #< "R1")
-instance (GFTyΠ f, Constructor m) => GFTyΣ (C1 m f)  where gFTyΣ _ _ = pure . (FTyC $ conName @m Dummy,) <$> gFTyΠ (Proxy @f) #< ("Con " <> conName @m Dummy )
+instance (GFTyΣ f, GFTyΣ g)       => GFTyΣ (f :+: g) where gFTyΣ _ _ = (gFTyΣ True (Proxy @f) #+< "L1") <|> (gFTyΣ True (Proxy @g) #+< "R1")
+instance (GFTyΠ f, Constructor m) => GFTyΣ (C1 m f)  where gFTyΣ _ _ = pure . (FTyC $ conName @m Dummy,) <$> gFTyΠ (Proxy @f) #+< ("Con " <> conName @m Dummy )
 
 -- | "Generic Tree Renderer" logic on generic product type
 class GFTyΠ (f :: Type -> Type)                where gFTyΠ :: Proxy f -> Res FTyΠ
-instance (GFTyΠ f, GFTyΠ g) => GFTyΠ (f :*: g) where gFTyΠ _ = (gFTyΠ (Proxy @f) #< "FST") <> (gFTyΠ (Proxy @g) #< "SND")
-instance HasFTy a => GFTyΠ (S1 m (Rec0 a))       where gFTyΠ _ = FTyΠ . pure <$> aFTy (Proxy @a) #< "Type"
+instance (GFTyΠ f, GFTyΠ g) => GFTyΠ (f :*: g) where gFTyΠ _ = (<>) <$> (gFTyΠ (Proxy @f) #*< "FST") <*> (gFTyΠ (Proxy @g) #*< "SND")
+instance HasFTy a => GFTyΠ (S1 m (Rec0 a))       where gFTyΠ _ = FTyΠ . pure <$> aFTy (Proxy @a) #*< "Type"
 instance GFTyΠ U1                              where gFTyΠ _ = pure $ FTyΠ []

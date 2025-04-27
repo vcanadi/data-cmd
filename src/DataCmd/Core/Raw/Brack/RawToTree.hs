@@ -1,15 +1,16 @@
 {- | Lexer that extract Tree by using brackets as branching indicator
 -}
 
-module DataCmd.Lexer.Brack where
+module DataCmd.Core.Raw.Brack.RawToTree where
 
-import Control.Arrow (Arrow (first))
+import Control.Arrow (Arrow (first), (>>>))
 import Data.List (isPrefixOf, isSuffixOf)
 import Data.Char (isSpace)
 import Data.Bool (bool)
 import DataCmd.Core.Res
 import DataCmd.Core.Tree
 import Control.Applicative (Alternative(empty))
+import DataCmd.Core.Trans (HasTrans (trans))
 
 -- | Variant of lexBrack that adds brackets to whitespace separation
 -- e.g. sp A (0 0)
@@ -32,7 +33,7 @@ lexBrack s = if isToken s then pure $ LF s else fmap ND $ traverse lexBrack =<< 
   where
     group :: String -> Res [String]
     group "" = pure []
-    group s = fstGroup s >>= \(fg, rest) -> (fg :) <$> group rest
+    group s = (fstGroup s #< ("First group in " <> s)) >>= \(fg, rest) -> (fg :) <$> group rest
       where
         fstGroup :: String -> Res (String, String)
         fstGroup ('(':cs) = close 0 cs
@@ -46,3 +47,9 @@ lexBrack s = if isToken s then pure $ LF s else fmap ND $ traverse lexBrack =<< 
         fstGroup cs = empty #< ("Group must start with opening bracket '(';  Input: " <> cs)
 
     isToken w = notElem '(' w && notElem ')' w
+
+-- | Use BrackLexer
+newtype BrackLexer = BrackLexer { brackLexerRawString :: String }
+
+instance HasTrans BrackLexer Tree where
+  trans = (lexBrack . brackLexerRawString) >>> (#< "Brack Lexer")
