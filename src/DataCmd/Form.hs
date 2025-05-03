@@ -9,7 +9,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module DataCmd.Core.Form where
+module DataCmd.Form where
 
 import Data.Kind (Type)
 

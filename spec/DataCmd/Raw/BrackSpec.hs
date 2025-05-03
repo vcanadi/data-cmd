@@ -1,9 +1,11 @@
 
-module DataCmd.Lexer.BrackSpec where
+module DataCmd.Raw.BrackSpec where
 
 import Test.Hspec
-import DataCmd.Lexer.Brack
-import DataCmd.Core.Tree
+import DataCmd.Raw.Brack.RawToTree
+import DataCmd.Tree.TreeToForm
+import DataCmd.Tree
+import DataCmd.Tree.FormToTree
 import Control.Monad(forM_)
 import DataCmd.Core.Res(Res(resRes))
 

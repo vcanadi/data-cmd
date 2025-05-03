@@ -1,8 +1,10 @@
-module DataCmd.Lexer.NSepSpec where
+module DataCmd.Raw.NSepSpec where
 
 import Test.Hspec
-import DataCmd.Lexer.NSep
-import DataCmd.Core.Tree
+import DataCmd.Raw.NSep.RawToTree
+import DataCmd.Tree.TreeToForm
+import DataCmd.Tree.FormToTree
+import DataCmd.Tree
 import Control.Monad(forM_)
 
 smplsLexNSep :: [(String, String, Tree)]

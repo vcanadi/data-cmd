@@ -1,9 +1,9 @@
 {- | Show tree with brackets
 -}
 
-module DataCmd.Core.Raw.Brack.TreeToRaw where
+module DataCmd.Raw.Brack.TreeToRaw where
 
-import DataCmd.Core.Tree
+import DataCmd.Tree
 
 showBrack :: Tree -> String
 showBrack (LF s) = s

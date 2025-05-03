@@ -1,9 +1,9 @@
 {- | Show Tree with multi-depth separator
 -}
 
-module DataCmd.Core.Raw.NSep.TreeToRaw where
+module DataCmd.Raw.NSep.TreeToRaw where
 
-import DataCmd.Core.Tree
+import DataCmd.Tree
 import Data.List (intercalate)
 
 showNSep :: Char -> Tree -> String

@@ -1,14 +1,16 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 {- | Lexer that extract Tree by using brackets as branching indicator
 -}
 
-module DataCmd.Core.Raw.Brack.RawToTree where
+module DataCmd.Raw.Brack.RawToTree where
 
 import Control.Arrow (Arrow (first), (>>>))
 import Data.List (isPrefixOf, isSuffixOf)
 import Data.Char (isSpace)
 import Data.Bool (bool)
 import DataCmd.Core.Res
-import DataCmd.Core.Tree
+import DataCmd.Tree
 import Control.Applicative (Alternative(empty))
 import DataCmd.Core.Trans (HasTrans (trans))
 
@@ -53,3 +55,9 @@ newtype BrackLexer = BrackLexer { brackLexerRawString :: String }
 
 instance HasTrans BrackLexer Tree where
   trans = (lexBrack . brackLexerRawString) >>> (#< "Brack Lexer")
+
+-- | Use NormaLexer
+newtype NormalLexer = NormalLexer { normalLexerRawString :: String }
+
+instance HasTrans NormalLexer Tree where
+  trans = lexNormal . normalLexerRawString

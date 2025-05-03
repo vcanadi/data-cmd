@@ -10,7 +10,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-#  OPTIONS_GHC -fno-warn-orphans #-}
 
-module DataCmd.Core.Form.FormToType where
+module DataCmd.Form.FormToType where
 
 import Data.Kind (Type)
 
@@ -22,7 +22,7 @@ import DataCmd.Core.Res
 import DataCmd.Core.Trans (HasTrans (trans))
 import DataCmd.Generic (GTypNm (gTypNm) , TypNm (typNm), MW (mW), Dummy (Dummy))
 import Control.Applicative (Alternative((<|>), empty))
-import DataCmd.Core.Form (pattern FPrim, F(FΣ), FC (FC), FΠ (FΠ), pattern (:..))
+import DataCmd.Form (pattern FPrim, F(FΣ), FC (FC), FΠ (FΠ), pattern (:..))
 import Control.Arrow ((>>>))
 
 

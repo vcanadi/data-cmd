@@ -1,13 +1,13 @@
 {-# LANGUAGE PatternSynonyms #-}
-module DataCmd.ParserSpec where
+module DataCmd.FormSpec where
 
 import Test.Hspec
 import GHC.Generics (Generic)
 import DataCmd.Core.Res(Res(resRes))
-import DataCmd.Core.Form (F(..), pattern (:..), pattern FPrim)
-import DataCmd.Core.Form.TypeToForm
+import DataCmd.Form (F(..), pattern (:..), pattern FPrim)
+import DataCmd.Form.TypeToForm
 import DataCmd.Core.Trans (HasTrans(trans))
-import DataCmd.Core.Form.FormToType (genFP, aFP)
+import DataCmd.Form.FormToType (genFP, aFP)
 import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck (forAll, arbitrary, Gen, choose)
 import Test.QuickCheck.Arbitrary (Arbitrary)

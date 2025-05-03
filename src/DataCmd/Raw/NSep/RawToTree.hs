@@ -1,14 +1,16 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 {- | Simple lexer that extracts Tree of tokens from multi separator tree specification
 -}
 {-# LANGUAGE LambdaCase #-}
 
-module DataCmd.Core.Raw.NSep.RawToTree where
+module DataCmd.Raw.NSep.RawToTree where
 
-import DataCmd.Core.Tree
+import DataCmd.Tree
 import Data.Char (isSpace)
 import DataCmd.Core.Trans (HasTrans (trans))
 import DataCmd.Core.Res ((#<))
-import DataCmd.Lexer.Brack (lexNormal)
+import DataCmd.Raw.Brack.RawToTree (lexNormal)
 
 -- >>> lexNSep '.' "0 . 1 . 20 .. 21 . 300 ... 301 .. 310 ... 311"
 -- ND [LF "0",LF "1",ND [LF "20",LF "21"],ND [ND [LF "300",LF "301"],ND [LF "310",LF "311"]]]
@@ -37,9 +39,3 @@ newtype DotLexer = DotLexer { dotLexerRawString :: String }
 
 instance HasTrans DotLexer Tree where
   trans raw = pure (lexNSep '.' $ dotLexerRawString raw) #< "Dot Lexer"
-
--- | Use NormaLexer
-newtype NormalLexer = NormalLexer { normalLexerRawString :: String }
-
-instance HasTrans NormalLexer Tree where
-  trans = lexNormal . normalLexerRawString

@@ -9,7 +9,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module DataCmd.Core.Form.TypeToForm where
+module DataCmd.Form.TypeToForm where
 
 import Data.Kind (Type)
 
@@ -18,7 +18,7 @@ import DataCmd.Generic (Dummy (Dummy))
 import DataCmd.Core.Res(Res, (#<), (.#), (#+<))
 import DataCmd.Core.Trans (HasTrans (trans))
 import Control.Category ((>>>))
-import DataCmd.Core.Form
+import DataCmd.Form
 
 -- | Types whose values can be rendered to F
 class HasF (a :: Type) where aF :: a -> Res F

@@ -2,9 +2,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module DataCmd.Core.Tree.FormToTree where
-import DataCmd.Core.Form (pattern (:..), F, pattern FPrim)
-import DataCmd.Core.Tree (Tree (ND, LF))
+module DataCmd.Tree.FormToTree where
+import DataCmd.Form (pattern (:..), F, pattern FPrim)
+import DataCmd.Tree (Tree (ND, LF))
 import DataCmd.Core.Trans (HasTrans (trans))
 import DataCmd.Core.Res ((#<))
 
