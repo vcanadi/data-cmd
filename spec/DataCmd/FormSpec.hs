@@ -3,20 +3,15 @@ module DataCmd.FormSpec where
 
 import Test.Hspec
 import GHC.Generics (Generic)
-import DataCmd.Core.Res(Res(resRes))
 import DataCmd.Form (F(..), pattern (:..), pattern FPrim)
-import DataCmd.Form.TypeToForm
+import DataCmd.Form.TypeToForm()
 import DataCmd.Core.Trans (HasTrans(trans))
-import DataCmd.Form.FormToType (genFP, aFP)
+import DataCmd.Form.FormToType (aFP)
 import Test.Hspec.QuickCheck (prop)
-import Test.QuickCheck (forAll, arbitrary, Gen, choose)
+import Test.QuickCheck ( forAll, arbitrary, Gen, elements )
 import Test.QuickCheck.Arbitrary (Arbitrary)
 import Test.QuickCheck.Arbitrary.Generic (genericArbitrary)
-import Test.QuickCheck.Gen (oneof)
-import Test.QuickCheck (elements)
-
-shouldResultIn :: (Show t, Eq t) => Res t -> t -> Expectation
-shouldResultIn a b = resRes a `shouldBe` Just b
+import DataCmd.Common (shouldResultIn)
 
 data Dir = Dir Int Int
  deriving (Generic, Show, Eq)
@@ -94,5 +89,3 @@ spec = do
     prop "trans @F @Act . trans @Act @F == id" $
       forAll arbitraryYF $ \fm ->
         (trans @F @Y1 fm >>= trans @Y1 @F) `shouldResultIn` fm
-
-

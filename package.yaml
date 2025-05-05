@@ -25,9 +25,9 @@ library:
 tests:
   spec:
     build-depends:
+    - data-cmd
     - base
     - hspec
-    - data-cmd
     - QuickCheck
     - generic-arbitrary
     main: Spec.hs

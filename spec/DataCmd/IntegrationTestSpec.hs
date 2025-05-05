@@ -5,31 +5,18 @@ module DataCmd.IntegrationTestSpec where
 import Test.Hspec
 -- import DataCmd.ParserSpec
 import DataCmd.Form
-import DataCmd.Tree.TreeToForm
-import DataCmd.Form.FormToType
-import Data.Proxy (Proxy(Proxy))
-import GHC.Generics (Generic)
-import Control.Monad((<=<), (>=>))
+import DataCmd.Tree.TreeToForm ()
+import DataCmd.Form.FormToType ()
+import Control.Monad((>=>))
 import DataCmd.Core.Res (Res(resRes))
-import DataCmd.Raw.NSep.RawToTree (DotLexer (DotLexer) )
-import DataCmd.Raw.Brack.RawToTree ( BrackLexer (BrackLexer), NormalLexer(NormalLexer))
+import DataCmd.Raw.NSep(DotLexer (DotLexer) )
+import DataCmd.Raw.Brack( BrackLexer (BrackLexer), NormalLexer(NormalLexer))
+import DataCmd.Raw.Brack.RawToTree ()
+import DataCmd.Raw.NSep.RawToTree ()
 import DataCmd.Tree(Tree)
 import DataCmd.Core.Trans (HasTrans(trans))
 import Control.Arrow ((>>>))
-
-
-data Dir = Dir Int Int
- deriving (Generic, Show, Eq)
-
-data Prod = Prod {prodA :: Int, prodB :: [Float] }
- deriving (Generic, Show, Eq)
-
-data Act
- = NoAct
- | MoveDir { moveDir  :: Dir }
- | MoveX { moveX :: Int }
- | Spawn { spawnLoc :: (Int, Int), spawnName :: String  }
- deriving (Generic, Show, Eq)
+import DataCmd.FormSpec
 
 spec :: Spec
 spec = do

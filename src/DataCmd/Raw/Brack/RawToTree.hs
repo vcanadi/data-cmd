@@ -1,4 +1,5 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 {- | Lexer that extract Tree by using brackets as branching indicator
 -}
@@ -13,6 +14,8 @@ import DataCmd.Core.Res
 import DataCmd.Tree
 import Control.Applicative (Alternative(empty))
 import DataCmd.Core.Trans (HasTrans (trans))
+import Data.List.NonEmpty (NonEmpty, singleton)
+import DataCmd.Raw.Brack(BrackLexer (brackLexerRawString), NormalLexer (normalLexerRawString))
 
 -- | Variant of lexBrack that adds brackets to whitespace separation
 -- e.g. sp A (0 0)
@@ -33,9 +36,8 @@ whiteBracket = filter (not . isSpace) . unwords . fmap (\w -> if needsWrap w the
 lexBrack :: String -> Res Tree
 lexBrack s = if isToken s then pure $ LF s else fmap ND $ traverse lexBrack =<< group s
   where
-    group :: String -> Res [String]
-    group "" = pure []
-    group s = (fstGroup s #< ("First group in " <> s)) >>= \(fg, rest) -> (fg :) <$> group rest
+    group :: String -> Res (NonEmpty String)
+    group s = (fstGroup s #< ("First group in " <> s)) >>= \(fg, rest) -> (if null rest then pure (singleton fg) else (singleton fg <>) <$> group rest)
       where
         fstGroup :: String -> Res (String, String)
         fstGroup ('(':cs) = close 0 cs
@@ -50,14 +52,8 @@ lexBrack s = if isToken s then pure $ LF s else fmap ND $ traverse lexBrack =<< 
 
     isToken w = notElem '(' w && notElem ')' w
 
--- | Use BrackLexer
-newtype BrackLexer = BrackLexer { brackLexerRawString :: String }
-
 instance HasTrans BrackLexer Tree where
   trans = (lexBrack . brackLexerRawString) >>> (#< "Brack Lexer")
-
--- | Use NormaLexer
-newtype NormalLexer = NormalLexer { normalLexerRawString :: String }
 
 instance HasTrans NormalLexer Tree where
   trans = lexNormal . normalLexerRawString

@@ -7,35 +7,35 @@
 module DataCmd.Raw.NSep.RawToTree where
 
 import DataCmd.Tree
+import DataCmd.Raw.NSep
 import Data.Char (isSpace)
 import DataCmd.Core.Trans (HasTrans (trans))
 import DataCmd.Core.Res ((#<))
-import DataCmd.Raw.Brack.RawToTree (lexNormal)
+import Data.List.NonEmpty (NonEmpty ((:|)))
+import qualified Data.List.NonEmpty as NE
 
 -- >>> lexNSep '.' "0 . 1 . 20 .. 21 . 300 ... 301 .. 310 ... 311"
 -- ND [LF "0",LF "1",ND [LF "20",LF "21"],ND [ND [LF "300",LF "301"],ND [LF "310",LF "311"]]]
 lexNSep :: Char -> String -> Tree
 lexNSep sep = f 1 . filter (not . isSpace)
   where
-    f k = (\case [s] | hasNoSep s -> LF s; ss -> ND $ fmap (f (succ k)) ss ) . splitOnNSeps sep k
+    f k = (\case s :| [] | hasNoSep s -> LF s; ss -> ND $ fmap (f (succ k)) ss ) . splitOnNSeps sep k
 
     hasNoSep = (sep `notElem`)
 
-splitOnNSeps :: Eq a => a -> Int -> [a] -> [[a]]
-splitOnNSeps sep k = f Nothing [] []
+splitOnNSeps :: Char -> Int -> String -> NonEmpty String
+splitOnNSeps sep k = f Nothing "" []
   where
-    f _ acc accs []                               = reverse (reverse acc : accs)
+    f _ acc accs []     = NE.reverse (reverse acc :| accs)
     f l acc accs (x:xs) =
       case l of
         Nothing | x /= sep            -> f Nothing          (x:acc)                       accs               xs
                 | otherwise           -> f (Just 1)         acc                           accs               xs
         Just l' | x == sep            -> f (Just $ succ l') acc                           accs               xs
                 | x /= sep && l' /= k -> f Nothing          (x:(replicate l' sep <> acc)) accs               xs
-                | otherwise           -> f Nothing          []                            (reverse acc:accs) (x:xs)
+                | otherwise           -> f Nothing          ""                            (reverse acc:accs) (x:xs)
 
-
--- | Use NSepLexer with '.' separator
-newtype DotLexer = DotLexer { dotLexerRawString :: String }
 
 instance HasTrans DotLexer Tree where
   trans raw = pure (lexNSep '.' $ dotLexerRawString raw) #< "Dot Lexer"
+

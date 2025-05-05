@@ -1,11 +1,23 @@
+{-# LANGUAGE OverloadedLists #-}
+
 module DataCmd.Raw.NSepSpec where
 
 import Test.Hspec
 import DataCmd.Raw.NSep.RawToTree
-import DataCmd.Tree.TreeToForm
-import DataCmd.Tree.FormToTree
+import DataCmd.Tree.TreeToForm ()
+import DataCmd.Tree.FormToTree ()
 import DataCmd.Tree
 import Control.Monad(forM_)
+import DataCmd.Raw.NSep (DotLexer (DotLexer))
+import DataCmd.Raw.NSep.RawToTree ()
+import DataCmd.Raw.NSep.TreeToRaw ()
+import Test.Hspec.QuickCheck (prop)
+import Test.QuickCheck (forAll, Arbitrary (..), Gen, suchThat, choose, vectorOf)
+import DataCmd.Core.Trans
+import Data.List.NonEmpty (NonEmpty ((:|)))
+import Data.Char (isAlphaNum)
+import DataCmd.Common (shouldResultIn)
+import Data.List (intercalate)
 
 smplsLexNSep :: [(String, String, Tree)]
 smplsLexNSep =
@@ -35,12 +47,50 @@ smplsLexNSep =
     )
   ]
 
+-- | Input for Tree --> Raw --> Tree === id property
+arbitraryTree :: Gen Tree
+arbitraryTree = f (1 :: Int)
+  where
+    f d = do
+      con <- arbitrary `suchThat` ((&&) <$> not . null <*> all isAlphaNum)
+      isLeaf <- (/=1) <$> choose (1,(d::Int)) -- select non-leaf node with probability 1/d
+      if isLeaf
+         then pure $ LF con
+         else  do
+           k <- choose (1::Int,8) -- Non leafs have 1 to 8 random children
+           ts <- vectorOf k (f $ succ d)
+           pure $ ND $ LF con :| ts
+
+-- | Input for Raw --> Tree --> Raw === id property
+arbitraryDot :: Gen String
+arbitraryDot = f (1 :: Int)
+  where
+    f d = do
+      s <- arbitrary `suchThat` ((&&) <$> not . null <*> all isAlphaNum)
+      isLeaf <- (/=1) <$> choose (1,(d::Int)) -- select non-leaf node with probability 1/d
+      if isLeaf
+         then pure $ s
+         else  do
+           k <- choose (1::Int,8) -- Non leafs have 1 to 8 random children
+           ts <- vectorOf k (f $ succ d)
+           pure $ intercalate (replicate d '.') ts
+
 specLexNSep :: Spec
-specLexNSep =
+specLexNSep = do
   describe "lexNSep '.'" $
     forM_ smplsLexNSep $ \(testDesc, raw, tree) ->
       it testDesc $
         lexNSep '.' raw `shouldBe` tree
+
+  describe "id properties" $ do
+    prop "trans @Tree @DotLexer . trans @DotLexer @Tree == id" $
+      forAll (arbitraryTree) $ \t ->
+        (trans @Tree @DotLexer t >>= trans @DotLexer @Tree) `shouldResultIn` t
+
+    prop "trans @DotLexer @Tree . trans @Tree @DotLexer == id" $
+      forAll arbitraryDot $ \raw ->
+        (trans @DotLexer @Tree (DotLexer raw) >>= trans @Tree @DotLexer) `shouldResultIn` DotLexer raw
+
 
 spec :: Spec
 spec = specLexNSep
