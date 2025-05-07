@@ -62,13 +62,13 @@ specFormer = do
         treeForm tree  `shouldResultIn` form
 
   describe "id properties" $ do
-    prop "trans @F @Tree . trans @Tree @F == id" $
+    prop "trn @F @Tree . trn @Tree @F == id" $
       forAll (arbitrary @F) $ \fm ->
-        (trans @F @Tree fm >>= trans @Tree @F) `shouldResultIn` fm
+        (trn @F @Tree fm >>= trn @Tree @F) `shouldResultIn` fm
 
-    prop "trans @Tree @F . trans @F @Tree == id" $
+    prop "trn @Tree @F . trn @F @Tree == id" $
       forAll arbitraryFormTree $ \ft ->
-        (trans @Tree @F ft >>= trans @F @Tree) `shouldResultIn` ft
+        (trn @Tree @F ft >>= trn @F @Tree) `shouldResultIn` ft
 
 
 

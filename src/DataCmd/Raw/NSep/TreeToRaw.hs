@@ -9,7 +9,7 @@ import DataCmd.Tree
 import DataCmd.Raw.NSep
 import Data.List (intercalate)
 import Data.List.NonEmpty (toList)
-import DataCmd.Core.Trans (HasTrans (trans))
+import DataCmd.Core.Trans (HasTrans (trn))
 
 showNSep :: Char -> Tree -> String
 showNSep c = f 1
@@ -20,4 +20,4 @@ showNSep c = f 1
     sep k = replicate k c
 
 instance HasTrans Tree DotRaw where
-  trans = pure . DotRaw . showNSep '.'
+  trn = pure . DotRaw . showNSep '.'

@@ -1,4 +1,4 @@
-{- | Result type of various transformations -}
+{- | Result type of various trnformations -}
 {-# LANGUAGE DeriveFunctor #-}
 
 module DataCmd.Core.Res where

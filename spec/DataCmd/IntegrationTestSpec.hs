@@ -14,7 +14,7 @@ import DataCmd.Raw.Brack( BrackRaw (BrackRaw), NormalRaw(NormalRaw))
 import DataCmd.Raw.Brack.RawToTree ()
 import DataCmd.Raw.NSep.RawToTree ()
 import DataCmd.Tree(Tree)
-import DataCmd.Core.Trans (HasTrans(trans))
+import DataCmd.Core.Trans (HasTrans(trn))
 import Control.Arrow ((>>>))
 import DataCmd.FormSpec
 
@@ -22,9 +22,9 @@ spec :: Spec
 spec = do
   describe "aFP with lexNSep" $ do
     let f =  DotRaw
-         >>> trans @DotRaw @Tree
-         >=> trans @Tree @F
-         >=> trans @F @Act
+         >>> trn @DotRaw @Tree
+         >=> trn @Tree @F
+         >=> trn @F @Act
 
     it "parses NoAct correctly"  $
       f "NoAct"  `shouldSatisfy` (resRes >>> (== Just NoAct))
@@ -41,9 +41,9 @@ spec = do
 
   describe "aTP  with lexBrack" $ do
     let f = BrackRaw
-         >>> trans @BrackRaw @Tree
-         >=> trans @Tree @F
-         >=> trans @F @Act
+         >>> trn @BrackRaw @Tree
+         >=> trn @Tree @F
+         >=> trn @F @Act
     it "parses NoAct correctly"  $
       f "(NoAct)"  `shouldSatisfy` (resRes >>> (== Just  NoAct))
 
@@ -58,9 +58,9 @@ spec = do
 
   describe "aTP  with lexNorma" $ do
     let f = NormalRaw
-         >>> trans @NormalRaw @Tree
-         >=> trans @Tree @F
-         >=> trans @F @Act
+         >>> trn @NormalRaw @Tree
+         >=> trn @Tree @F
+         >=> trn @F @Act
     pure ()
     -- it "parses NoAct correctly"  $
     --   f "NoAct"  `shouldSatisfy` (resRes >>> (== Just  NoAct))

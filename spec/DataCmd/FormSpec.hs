@@ -5,7 +5,7 @@ import Test.Hspec
 import GHC.Generics (Generic)
 import DataCmd.Form (F(..), pattern (:..), pattern FPrim)
 import DataCmd.Form.TypeToForm()
-import DataCmd.Core.Trans (HasTrans(trans))
+import DataCmd.Core.Trans (HasTrans(trn))
 import DataCmd.Form.FormToType (aFP)
 import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck ( forAll, arbitrary, Gen, elements )
@@ -29,7 +29,7 @@ data Act
 data X1 = X10 | X11 deriving (Show, Eq, Generic)
 data X2 = X20 | X21 | X22 deriving (Show, Eq, Generic)
 
--- | A type that can be translated to F's subset
+-- | A type that can be trnlated to F's subset
 data Y1
   = Y10 { y10x1 :: X1, y10x2 :: X2 }
   | Y11 { y11y1 :: Y1 }
@@ -61,31 +61,31 @@ spec = do
     it "parses primitive correctly"  $
       aFP @Int (FPrim "1")  `shouldResultIn` 1
 
-  describe "trans @F @Act" $ do
+  describe "trn @F @Act" $ do
     it "parses List correctly" $
-      trans @F @[Int] ("L" :.. [FPrim "1", FPrim "2"]) `shouldResultIn` [1, 2]
+      trn @F @[Int] ("L" :.. [FPrim "1", FPrim "2"]) `shouldResultIn` [1, 2]
 
     it "parses Prod correctly" $
-      trans @F @Prod ("Prod" :.. [FPrim "1", "L" :.. [FPrim "2", FPrim "3"]]) `shouldResultIn` Prod 1 [2, 3]
+      trn @F @Prod ("Prod" :.. [FPrim "1", "L" :.. [FPrim "2", FPrim "3"]]) `shouldResultIn` Prod 1 [2, 3]
 
     it "parses NoAct correctly"  $
-      trans @F @Act ("NoAct" :.. [])  `shouldResultIn` NoAct
+      trn @F @Act ("NoAct" :.. [])  `shouldResultIn` NoAct
 
     it "parses Move correctly"  $
-      trans @F @Act ("MoveDir" :.. ["Dir" :.. [FPrim "1", FPrim "2"]])  `shouldResultIn` MoveDir (Dir 1 2)
+      trn @F @Act ("MoveDir" :.. ["Dir" :.. [FPrim "1", FPrim "2"]])  `shouldResultIn` MoveDir (Dir 1 2)
 
     it "parses MoveX correctly"  $
-      trans @F @Act ("MoveX" :.. [FPrim "1" ])  `shouldResultIn` MoveX 1
+      trn @F @Act ("MoveX" :.. [FPrim "1" ])  `shouldResultIn` MoveX 1
 
     it "parses Spawn correctly"  $
-      trans @F @Act ("Spawn" :.. [ "L" :.. [FPrim "1", FPrim "2"], FPrim "Player0"])  `shouldResultIn` Spawn (1,2) "Player0"
+      trn @F @Act ("Spawn" :.. [ "L" :.. [FPrim "1", FPrim "2"], FPrim "Player0"])  `shouldResultIn` Spawn (1,2) "Player0"
 
 
   describe "id properties" $ do
-    prop "trans @Act @F . trans @F @Act == id" $
+    prop "trn @Act @F . trn @F @Act == id" $
       forAll (arbitrary @Act) $ \act ->
-        (trans @Act @F act >>= trans @F @Act) `shouldResultIn` act
+        (trn @Act @F act >>= trn @F @Act) `shouldResultIn` act
 
-    prop "trans @F @Act . trans @Act @F == id" $
+    prop "trn @F @Act . trn @Act @F == id" $
       forAll arbitraryYF $ \fm ->
-        (trans @F @Y1 fm >>= trans @Y1 @F) `shouldResultIn` fm
+        (trn @F @Y1 fm >>= trn @Y1 @F) `shouldResultIn` fm

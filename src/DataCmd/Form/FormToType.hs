@@ -19,7 +19,7 @@ import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, 
 import Text.Read (readEither)
 import Data.Char (toLower)
 import DataCmd.Core.Res
-import DataCmd.Core.Trans (HasTrans (trans))
+import DataCmd.Core.Trans (HasTrans (trn))
 import DataCmd.Generic (GTypNm (gTypNm) , TypNm (typNm), MW (mW), Dummy (Dummy))
 import Control.Applicative (Alternative((<|>), empty))
 import DataCmd.Form (pattern FPrim, F(FΣ), FC (FC), FΠ (FΠ), pattern (:..))
@@ -32,7 +32,7 @@ readF (FPrim s) = parseEither s
 readF t = parseErr $ "expecting FPrim " <> typNm (Proxy @a) <> ", got: " <> show t
 
 instance (HasFP a) => HasTrans F a where
-  trans = aFP @a >>> (#< "Parser")
+  trn = aFP @a >>> (#< "Parser")
 
 class TypNm a => HasFP (a :: Type) where aFP :: F -> Res a
 instance HasFP Bool   where aFP  = readF >>> (#< "Parsing Bool")

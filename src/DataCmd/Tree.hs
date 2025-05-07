@@ -10,7 +10,7 @@ import Data.Bool (bool)
 import Data.List.NonEmpty (NonEmpty , singleton, toList)
 import GHC.Generics (Generic)
 
--- | Result of succesful lexing. Intermediate representation for parsing. Raw text is translated into Tree representation (tree of tokens).
+-- | Result of succesful lexing. Intermediate representation for parsing. Raw text is trnlated into Tree representation (tree of tokens).
 data Tree = LF String | ND (NonEmpty Tree) deriving (Show, Eq, Generic)
 
 isLF :: Tree -> Bool

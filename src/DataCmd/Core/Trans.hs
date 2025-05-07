@@ -5,4 +5,5 @@ module DataCmd.Core.Trans where
 
 import DataCmd.Core.Res
 
-class HasTrans a b where trans :: a -> Res b
+-- | Effectful transformation of 'a' into 'b'
+class HasTrans a b where trn :: a -> Res b

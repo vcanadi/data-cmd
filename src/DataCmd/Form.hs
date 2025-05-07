@@ -17,7 +17,7 @@ import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, 
 import DataCmd.Generic (Dummy (Dummy))
 import DataCmd.Core.Res(Res, (#<), (.#), (#+<), (#*<))
 import Data.Proxy (Proxy (Proxy))
-import DataCmd.Core.Trans (HasTrans (trans))
+import DataCmd.Core.Trans (HasTrans (trn))
 import Control.Category ((>>>))
 import Test.QuickCheck (Arbitrary (arbitrary))
 import Test.QuickCheck.Arbitrary.Generic (genericArbitrary)

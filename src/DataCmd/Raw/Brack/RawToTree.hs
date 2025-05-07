@@ -13,7 +13,7 @@ import Data.Bool (bool)
 import DataCmd.Core.Res
 import DataCmd.Tree
 import Control.Applicative (Alternative(empty))
-import DataCmd.Core.Trans (HasTrans (trans))
+import DataCmd.Core.Trans (HasTrans (trn))
 import Data.List.NonEmpty (NonEmpty, singleton)
 import DataCmd.Raw.Brack(BrackRaw (brackRawString), NormalRaw (normalRawString))
 
@@ -53,7 +53,7 @@ lexBrack s = if isToken s then pure $ LF s else fmap ND $ traverse lexBrack =<< 
     isToken w = notElem '(' w && notElem ')' w
 
 instance HasTrans BrackRaw Tree where
-  trans = (lexBrack . brackRawString) >>> (#< "Brack Lexer")
+  trn = (lexBrack . brackRawString) >>> (#< "Brack Lexer")
 
 instance HasTrans NormalRaw Tree where
-  trans = lexNormal . normalRawString
+  trn = lexNormal . normalRawString

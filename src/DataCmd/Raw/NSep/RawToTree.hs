@@ -9,7 +9,7 @@ module DataCmd.Raw.NSep.RawToTree where
 import DataCmd.Tree
 import DataCmd.Raw.NSep
 import Data.Char (isSpace)
-import DataCmd.Core.Trans (HasTrans (trans))
+import DataCmd.Core.Trans (HasTrans (trn))
 import DataCmd.Core.Res ((#<))
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import qualified Data.List.NonEmpty as NE
@@ -37,5 +37,5 @@ splitOnNSeps sep k = f Nothing "" []
 
 
 instance HasTrans DotRaw Tree where
-  trans raw = pure (lexNSep '.' $ dotRawString raw) #< "Dot Lexer"
+  trn raw = pure (lexNSep '.' $ dotRawString raw) #< "Dot Lexer"
 

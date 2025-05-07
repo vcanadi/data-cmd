@@ -83,13 +83,13 @@ specLexNSep = do
         lexNSep '.' raw `shouldBe` tree
 
   describe "id properties" $ do
-    prop "trans @Tree @DotRaw . trans @DotRaw @Tree == id" $
+    prop "trn @Tree @DotRaw . trn @DotRaw @Tree == id" $
       forAll (arbitraryTree) $ \t ->
-        (trans @Tree @DotRaw t >>= trans @DotRaw @Tree) `shouldResultIn` t
+        (trn @Tree @DotRaw t >>= trn @DotRaw @Tree) `shouldResultIn` t
 
-    prop "trans @DotRaw @Tree . trans @Tree @DotRaw == id" $
+    prop "trn @DotRaw @Tree . trn @Tree @DotRaw == id" $
       forAll arbitraryDot $ \raw ->
-        (trans @DotRaw @Tree (DotRaw raw) >>= trans @Tree @DotRaw) `shouldResultIn` DotRaw raw
+        (trn @DotRaw @Tree (DotRaw raw) >>= trn @Tree @DotRaw) `shouldResultIn` DotRaw raw
 
 
 spec :: Spec

@@ -16,7 +16,7 @@ import Data.Kind (Type)
 import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, Rec0, K1(K1), D1, Constructor (conName), from, U1, Selector (selName))
 import DataCmd.Generic (Dummy (Dummy))
 import DataCmd.Core.Res(Res, (#<), (.#), (#+<))
-import DataCmd.Core.Trans (HasTrans (trans))
+import DataCmd.Core.Trans (HasTrans (trn))
 import Control.Category ((>>>))
 import DataCmd.Form
 
@@ -52,4 +52,4 @@ instance (HasF a, Selector m) => GFΠ (S1 m (Rec0 a)) where gFΠ (M1 (K1 x)) = (
 instance GFΠ U1                                      where gFΠ _ = pure $ FΠ []
 
 instance {-# OVERLAPPABLE #-} (HasF a) => HasTrans a F where
-  trans = aF @a >>> (#< "Form render")
+  trn = aF @a >>> (#< "Form render")
