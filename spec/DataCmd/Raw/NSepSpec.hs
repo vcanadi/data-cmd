@@ -8,7 +8,7 @@ import DataCmd.Tree.TreeToForm ()
 import DataCmd.Tree.FormToTree ()
 import DataCmd.Tree
 import Control.Monad(forM_)
-import DataCmd.Raw.NSep (DotLexer (DotLexer))
+import DataCmd.Raw.NSep (DotRaw (DotRaw))
 import DataCmd.Raw.NSep.RawToTree ()
 import DataCmd.Raw.NSep.TreeToRaw ()
 import Test.Hspec.QuickCheck (prop)
@@ -83,13 +83,13 @@ specLexNSep = do
         lexNSep '.' raw `shouldBe` tree
 
   describe "id properties" $ do
-    prop "trans @Tree @DotLexer . trans @DotLexer @Tree == id" $
+    prop "trans @Tree @DotRaw . trans @DotRaw @Tree == id" $
       forAll (arbitraryTree) $ \t ->
-        (trans @Tree @DotLexer t >>= trans @DotLexer @Tree) `shouldResultIn` t
+        (trans @Tree @DotRaw t >>= trans @DotRaw @Tree) `shouldResultIn` t
 
-    prop "trans @DotLexer @Tree . trans @Tree @DotLexer == id" $
+    prop "trans @DotRaw @Tree . trans @Tree @DotRaw == id" $
       forAll arbitraryDot $ \raw ->
-        (trans @DotLexer @Tree (DotLexer raw) >>= trans @Tree @DotLexer) `shouldResultIn` DotLexer raw
+        (trans @DotRaw @Tree (DotRaw raw) >>= trans @Tree @DotRaw) `shouldResultIn` DotRaw raw
 
 
 spec :: Spec

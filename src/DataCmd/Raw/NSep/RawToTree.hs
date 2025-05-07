@@ -36,6 +36,6 @@ splitOnNSeps sep k = f Nothing "" []
                 | otherwise           -> f Nothing          ""                            (reverse acc:accs) (x:xs)
 
 
-instance HasTrans DotLexer Tree where
-  trans raw = pure (lexNSep '.' $ dotLexerRawString raw) #< "Dot Lexer"
+instance HasTrans DotRaw Tree where
+  trans raw = pure (lexNSep '.' $ dotRawString raw) #< "Dot Lexer"
 

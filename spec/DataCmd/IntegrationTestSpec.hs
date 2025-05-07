@@ -9,8 +9,8 @@ import DataCmd.Tree.TreeToForm ()
 import DataCmd.Form.FormToType ()
 import Control.Monad((>=>))
 import DataCmd.Core.Res (Res(resRes))
-import DataCmd.Raw.NSep(DotLexer (DotLexer) )
-import DataCmd.Raw.Brack( BrackLexer (BrackLexer), NormalLexer(NormalLexer))
+import DataCmd.Raw.NSep(DotRaw (DotRaw) )
+import DataCmd.Raw.Brack( BrackRaw (BrackRaw), NormalRaw(NormalRaw))
 import DataCmd.Raw.Brack.RawToTree ()
 import DataCmd.Raw.NSep.RawToTree ()
 import DataCmd.Tree(Tree)
@@ -21,8 +21,8 @@ import DataCmd.FormSpec
 spec :: Spec
 spec = do
   describe "aFP with lexNSep" $ do
-    let f =  DotLexer
-         >>> trans @DotLexer @Tree
+    let f =  DotRaw
+         >>> trans @DotRaw @Tree
          >=> trans @Tree @F
          >=> trans @F @Act
 
@@ -40,8 +40,8 @@ spec = do
 
 
   describe "aTP  with lexBrack" $ do
-    let f = BrackLexer
-         >>> trans @BrackLexer @Tree
+    let f = BrackRaw
+         >>> trans @BrackRaw @Tree
          >=> trans @Tree @F
          >=> trans @F @Act
     it "parses NoAct correctly"  $
@@ -57,8 +57,8 @@ spec = do
       f "(Spawn)((L)(1)(2))(Player0)" `shouldSatisfy` (resRes >>> (== Just (Spawn (1,2) "Player0")))
 
   describe "aTP  with lexNorma" $ do
-    let f = NormalLexer
-         >>> trans @NormalLexer @Tree
+    let f = NormalRaw
+         >>> trans @NormalRaw @Tree
          >=> trans @Tree @F
          >=> trans @F @Act
     pure ()

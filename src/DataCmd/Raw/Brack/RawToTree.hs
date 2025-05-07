@@ -15,7 +15,7 @@ import DataCmd.Tree
 import Control.Applicative (Alternative(empty))
 import DataCmd.Core.Trans (HasTrans (trans))
 import Data.List.NonEmpty (NonEmpty, singleton)
-import DataCmd.Raw.Brack(BrackLexer (brackLexerRawString), NormalLexer (normalLexerRawString))
+import DataCmd.Raw.Brack(BrackRaw (brackRawString), NormalRaw (normalRawString))
 
 -- | Variant of lexBrack that adds brackets to whitespace separation
 -- e.g. sp A (0 0)
@@ -52,8 +52,8 @@ lexBrack s = if isToken s then pure $ LF s else fmap ND $ traverse lexBrack =<< 
 
     isToken w = notElem '(' w && notElem ')' w
 
-instance HasTrans BrackLexer Tree where
-  trans = (lexBrack . brackLexerRawString) >>> (#< "Brack Lexer")
+instance HasTrans BrackRaw Tree where
+  trans = (lexBrack . brackRawString) >>> (#< "Brack Lexer")
 
-instance HasTrans NormalLexer Tree where
-  trans = lexNormal . normalLexerRawString
+instance HasTrans NormalRaw Tree where
+  trans = lexNormal . normalRawString

@@ -1,8 +1,8 @@
 
 module DataCmd.Raw.Brack where
 
--- | Use BrackLexer
-newtype BrackLexer = BrackLexer { brackLexerRawString :: String }
+-- | Use bracket grouped string
+newtype BrackRaw = BrackRaw { brackRawString :: String }
 
--- | Use NormaLexer
-newtype NormalLexer = NormalLexer { normalLexerRawString :: String }
+-- | BrackRaw version with additional optimizations
+newtype NormalRaw = NormalRaw { normalRawString :: String }

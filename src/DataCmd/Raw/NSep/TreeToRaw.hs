@@ -19,5 +19,5 @@ showNSep c = f 1
 
     sep k = replicate k c
 
-instance HasTrans Tree DotLexer where
-  trans = pure . DotLexer . showNSep '.'
+instance HasTrans Tree DotRaw where
+  trans = pure . DotRaw . showNSep '.'
