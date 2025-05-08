@@ -17,3 +17,16 @@ import DataCmd.Tree.TreeToForm
 import DataCmd.Tree.FormToTree
 import DataCmd.Form.FormToType
 import DataCmd.Form.TypeToForm
+import DataCmd.Core.Res (Res)
+import DataCmd.Raw.NSep (DotRaw (DotRaw))
+import DataCmd.Tree (Tree)
+import DataCmd.Form (F)
+import Control.Arrow ((>>>))
+import DataCmd.Core.Trans (HasTrans(trn))
+import Control.Monad ((>=>))
+
+-- parseDotRaw :: forall a. String -> Res a
+-- parseDotRaw = DotRaw
+--          >>> trn @DotRaw @Tree
+--          >=> trn @Tree @F
+--          >=> trn @F @a

@@ -4,7 +4,7 @@ module DataCmd.FormSpec where
 
 import Test.Hspec
 import GHC.Generics (Generic)
-import DataCmd.Form (F(..), pattern (:..), pattern FPrim)
+import DataCmd.Form (F(..), pattern (:..), pattern FPrim, FC, FΠ)
 import DataCmd.Form.TypeToForm()
 import DataCmd.Core.Trans (HasTrans(trn))
 import DataCmd.Form.FormToType (aFP)
@@ -13,6 +13,7 @@ import Test.QuickCheck ( forAll, arbitrary, Gen, elements )
 import Test.QuickCheck.Arbitrary (Arbitrary)
 import Test.QuickCheck.Arbitrary.Generic (genericArbitrary)
 import DataCmd.Common (shouldResultIn)
+
 
 -- | Direction
 data Dir = Dir Int Int

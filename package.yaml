@@ -18,8 +18,6 @@ default-extensions:
 
 dependencies:
   - base
-  - QuickCheck
-  - generic-arbitrary
 
 library:
   source-dirs: src

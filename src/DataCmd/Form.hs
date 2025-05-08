@@ -19,8 +19,6 @@ import DataCmd.Core.Res(Res, (#<), (.#), (#+<), (#*<))
 import Data.Proxy (Proxy (Proxy))
 import DataCmd.Core.Trans (HasTrans (trn))
 import Control.Category ((>>>))
-import Test.QuickCheck (Arbitrary (arbitrary))
-import Test.QuickCheck.Arbitrary.Generic (genericArbitrary)
 import Control.Applicative ((<|>))
 
 
@@ -47,10 +45,6 @@ instance Show F where
   show (c :.. ps) = show c <> " :.. " <> show ps
 
 instance Semigroup FΠ where FΠ ps0 <> FΠ ps1 = FΠ $ ps0 <> ps1
-
-instance Arbitrary FC where arbitrary = genericArbitrary
-instance Arbitrary FΠ where arbitrary = genericArbitrary
-instance Arbitrary F where arbitrary = genericArbitrary
 
 -- Type level
 

@@ -20,7 +20,7 @@ import DataCmd.FormSpec
 
 spec :: Spec
 spec = do
-  describe "aFP with lexNSep" $ do
+  describe "Use DotRaw for stage 0" $ do
     let f =  DotRaw
          >>> trn @DotRaw @Tree
          >=> trn @Tree @F
@@ -42,7 +42,7 @@ spec = do
       f "Rope . Line .. Pos ... 1 ... 2 .. Pos ... 3 ... 4 " `shouldSatisfy` (resRes >>> (== Just (Rope $ Line (Pos 1 2) (Pos 3 4))))
 
 
-  describe "aTP  with lexBrack" $ do
+  describe "Use BrackRaw for stage 0" $ do
     let f = BrackRaw
          >>> trn @BrackRaw @Tree
          >=> trn @Tree @F
@@ -63,7 +63,7 @@ spec = do
       f "(Rope)((Line)((Pos)(1)(2))((Pos)(3)(4)))" `shouldSatisfy` (resRes >>> (== Just (Rope $ Line (Pos 1 2) (Pos 3 4) )))
 
 
-  describe "aTP  with lexBrackPlus" $ do
+  describe "Use BrackPlusRaw for stage 0" $ do
     let f = BrackPlusRaw
          >>> trn @BrackPlusRaw @Tree
          >=> trn @Tree @F
@@ -74,9 +74,9 @@ spec = do
     it "parses Move correctly"  $
       f "MoveDir (Dir 1 2)" `shouldSatisfy` (resRes >>> (== Just (MoveDir (Dir 1 2))))
 
-    -- it "parses MoveX correctly"  $
-    --   f "(MoveX)(1)"  `shouldSatisfy` (resRes >>> (== Just (MoveX 1)))
+    it "parses MoveX correctly"  $
+      f "MoveX 1"  `shouldSatisfy` (resRes >>> (== Just (MoveX 1)))
 
-    -- it "parses Spawn correctly"  $
-    --   f "(Spawn)((Pos)(1)(2))(\"Player0\")" `shouldSatisfy` (resRes >>> (== Just (Spawn (Pos 1 2) "Player0")))
+    it "parses Spawn correctly"  $
+      f "Spawn (Pos 1 2) (Player0)" `shouldSatisfy` (resRes >>> (== Just (Spawn (Pos 1 2) "Player0")))
 
