@@ -5,4 +5,4 @@ module DataCmd.Raw.Brack where
 newtype BrackRaw = BrackRaw { brackRawString :: String }
 
 -- | BrackRaw version with additional optimizations
-newtype NormalRaw = NormalRaw { normalRawString :: String }
+newtype BrackPlusRaw = BrackPlusRaw { brackPlusRawString :: String }

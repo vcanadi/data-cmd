@@ -5,6 +5,8 @@ author:             Vito Canadi
 maintainer:         vito.canadi@gmail.com
 extra-source-files: CHANGELOG.md
 synopsis:           Parser and renderer for any(generic) type. Suitable for command line, textual represenation of the type
+ghc-options:
+  -fconstraint-solver-iterations=10
 
 default-extensions:
   - LambdaCase

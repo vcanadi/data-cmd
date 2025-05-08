@@ -10,7 +10,7 @@ import DataCmd.Form.FormToType ()
 import Control.Monad((>=>))
 import DataCmd.Core.Res (Res(resRes))
 import DataCmd.Raw.NSep(DotRaw (DotRaw) )
-import DataCmd.Raw.Brack( BrackRaw (BrackRaw), NormalRaw(NormalRaw))
+import DataCmd.Raw.Brack( BrackRaw (BrackRaw), BrackPlusRaw(BrackPlusRaw))
 import DataCmd.Raw.Brack.RawToTree ()
 import DataCmd.Raw.NSep.RawToTree ()
 import DataCmd.Tree(Tree)
@@ -36,7 +36,10 @@ spec = do
       f "MoveX . 1"  `shouldSatisfy` (resRes >>> (== Just (MoveX 1)))
 
     it "parses Spawn correctly"  $
-      f "Spawn . L .. 1 .. 2 . Player0" `shouldSatisfy` (resRes >>> (== Just (Spawn (1,2) "Player0")))
+      f "Spawn . Pos .. 1 .. 2 . Player0" `shouldSatisfy` (resRes >>> (== Just (Spawn (Pos 1 2) "Player0")))
+
+    it "parses Rope correctly"  $
+      f "Rope . Line .. Pos ... 1 ... 2 .. Pos ... 3 ... 4 " `shouldSatisfy` (resRes >>> (== Just (Rope $ Line (Pos 1 2) (Pos 3 4))))
 
 
   describe "aTP  with lexBrack" $ do
@@ -54,23 +57,26 @@ spec = do
       f "(MoveX)(1)"  `shouldSatisfy` (resRes >>> (== Just (MoveX 1)))
 
     it "parses Spawn correctly"  $
-      f "(Spawn)((L)(1)(2))(Player0)" `shouldSatisfy` (resRes >>> (== Just (Spawn (1,2) "Player0")))
+      f "(Spawn)((Pos)(1)(2))(Player0)" `shouldSatisfy` (resRes >>> (== Just (Spawn (Pos 1 2) "Player0")))
 
-  describe "aTP  with lexNorma" $ do
-    let f = NormalRaw
-         >>> trn @NormalRaw @Tree
+    it "parses Spawn correctly"  $
+      f "(Rope)((Line)((Pos)(1)(2))((Pos)(3)(4)))" `shouldSatisfy` (resRes >>> (== Just (Rope $ Line (Pos 1 2) (Pos 3 4) )))
+
+
+  describe "aTP  with lexBrackPlus" $ do
+    let f = BrackPlusRaw
+         >>> trn @BrackPlusRaw @Tree
          >=> trn @Tree @F
          >=> trn @F @Act
-    pure ()
-    -- it "parses NoAct correctly"  $
-    --   f "NoAct"  `shouldSatisfy` (resRes >>> (== Just  NoAct))
+    it "parses NoAct correctly"  $
+      f "NoAct"  `shouldSatisfy` (resRes >>> (== Just  NoAct))
 
-    -- it "parses Move correctly"  $
-    --   f "MoveDir (Dir 1 2)" `shouldSatisfy` (resRes >>> (== Just (MoveDir (Dir 1 2))))
+    it "parses Move correctly"  $
+      f "MoveDir (Dir 1 2)" `shouldSatisfy` (resRes >>> (== Just (MoveDir (Dir 1 2))))
 
     -- it "parses MoveX correctly"  $
     --   f "(MoveX)(1)"  `shouldSatisfy` (resRes >>> (== Just (MoveX 1)))
 
     -- it "parses Spawn correctly"  $
-    --   f "(Spawn)(((,))(1)(2))(\"Player0\")" `shouldSatisfy` (resRes >>> (== Just (Spawn (1,2) "Player0")))
+    --   f "(Spawn)((Pos)(1)(2))(\"Player0\")" `shouldSatisfy` (resRes >>> (== Just (Spawn (Pos 1 2) "Player0")))
 

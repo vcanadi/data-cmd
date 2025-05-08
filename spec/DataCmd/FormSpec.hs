@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternSynonyms #-}
+
 module DataCmd.FormSpec where
 
 import Test.Hspec
@@ -13,17 +14,27 @@ import Test.QuickCheck.Arbitrary (Arbitrary)
 import Test.QuickCheck.Arbitrary.Generic (genericArbitrary)
 import DataCmd.Common (shouldResultIn)
 
+-- | Direction
 data Dir = Dir Int Int
  deriving (Generic, Show, Eq)
 
+-- | Position
+data Pos = Pos Int Int
+ deriving (Generic, Show, Eq)
+
 data Prod = Prod {prodA :: Int, prodB :: [Float] }
+ deriving (Generic, Show, Eq)
+
+-- | Line/segment in space
+data Line  = Line Pos Pos
  deriving (Generic, Show, Eq)
 
 data Act
  = NoAct
  | MoveDir { moveDir  :: Dir }
  | MoveX { moveX :: Int }
- | Spawn { spawnLoc :: (Int, Int), spawnName :: String  }
+ | Spawn { spawnLoc :: Pos, spawnName :: String  }
+ | Rope { ropeLine :: Line }
  deriving (Generic, Show, Eq)
 
 data X1 = X10 | X11 deriving (Show, Eq, Generic)
@@ -49,6 +60,8 @@ arbitraryYF = do
        pure $ con :.. [ y11y1 ]
 
 instance Arbitrary Dir where arbitrary = genericArbitrary
+instance Arbitrary Pos where arbitrary = genericArbitrary
+instance Arbitrary Line where arbitrary = genericArbitrary
 instance Arbitrary Act where arbitrary = genericArbitrary
 instance Arbitrary X1 where arbitrary = genericArbitrary
 instance Arbitrary X2 where arbitrary = genericArbitrary
@@ -78,7 +91,11 @@ spec = do
       trn @F @Act ("MoveX" :.. [FPrim "1" ])  `shouldResultIn` MoveX 1
 
     it "parses Spawn correctly"  $
-      trn @F @Act ("Spawn" :.. [ "L" :.. [FPrim "1", FPrim "2"], FPrim "Player0"])  `shouldResultIn` Spawn (1,2) "Player0"
+      trn @F @Act ("Spawn" :.. [ "Pos" :.. [FPrim "1", FPrim "2"], FPrim "Player0"])  `shouldResultIn` Spawn (Pos 1 2) "Player0"
+
+    it "parses Rope correctly"  $
+      trn @F @Act ("Rope" :.. [ "Line" :.. [ "Pos" :.. [FPrim "1", FPrim "2"], "Pos" :.. [FPrim "3", FPrim "4"]]])
+      `shouldResultIn` Rope (Line (Pos 1 2) (Pos 3 4))
 
 
   describe "id properties" $ do

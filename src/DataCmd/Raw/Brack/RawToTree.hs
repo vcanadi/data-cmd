@@ -15,17 +15,17 @@ import DataCmd.Tree
 import Control.Applicative (Alternative(empty))
 import DataCmd.Core.Trans (HasTrans (trn))
 import Data.List.NonEmpty (NonEmpty, singleton)
-import DataCmd.Raw.Brack(BrackRaw (brackRawString), NormalRaw (normalRawString))
+import DataCmd.Raw.Brack(BrackRaw (brackRawString), BrackPlusRaw (brackPlusRawString))
 
 -- | Variant of lexBrack that adds brackets to whitespace separation
 -- e.g. sp A (0 0)
-lexNormal :: String -> Res Tree
-lexNormal = lexBrack . whiteBracket
+lexBrackPlus :: String -> Res Tree
+lexBrackPlus = lexBrack . addBrackets
 
 -- | Wrap low level tokens with brackets to interpret things like
 -- 'f x (y x)' as '(f)(x)((y)(z))'
-whiteBracket :: String -> String
-whiteBracket = filter (not . isSpace) . unwords . fmap (\w -> if needsWrap w then wrap w else w) . words
+addBrackets :: String -> String
+addBrackets = filter (not . isSpace) . unwords . fmap (\w -> if needsWrap w then wrap w else w) . words
   where
     isToken w = notElem '(' w && notElem ')' w
     needsWrap w = isToken w || w/="(" && "(" `isPrefixOf` w || w /=")" && ")" `isSuffixOf` w
@@ -55,5 +55,5 @@ lexBrack s = if isToken s then pure $ LF s else fmap ND $ traverse lexBrack =<< 
 instance HasTrans BrackRaw Tree where
   trn = (lexBrack . brackRawString) >>> (#< "Brack Lexer")
 
-instance HasTrans NormalRaw Tree where
-  trn = lexNormal . normalRawString
+instance HasTrans BrackPlusRaw Tree where
+  trn = lexBrackPlus . brackPlusRawString
