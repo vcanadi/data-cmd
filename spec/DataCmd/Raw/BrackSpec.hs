@@ -3,7 +3,7 @@
 module DataCmd.Raw.BrackSpec where
 
 import Test.Hspec
-import DataCmd.Raw.Brack.RawToTree
+import DataCmd.Raw.Brack.Trans
 import DataCmd.Tree
 import Control.Monad(forM_)
 import DataCmd.Common (shouldResultIn)

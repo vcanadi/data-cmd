@@ -5,14 +5,14 @@ module DataCmd.Common where
 import DataCmd.Core.Res (Res (resRes))
 import Test.Hspec (Expectation, shouldBe)
 import Test.QuickCheck (Arbitrary (..))
-import DataCmd.Form (FC, FΠ, F)
+import DataCmd.Form (FC, FΠ, Form)
 import Test.QuickCheck.Arbitrary.Generic (genericArbitrary)
 
 -- Orphan Arbitrary instances for Form
 
 instance Arbitrary FC where arbitrary = genericArbitrary
 instance Arbitrary FΠ where arbitrary = genericArbitrary
-instance Arbitrary F where arbitrary = genericArbitrary
+instance Arbitrary Form where arbitrary = genericArbitrary
 
 
 shouldResultIn :: (Show t, Eq t) => Res t -> t -> Expectation

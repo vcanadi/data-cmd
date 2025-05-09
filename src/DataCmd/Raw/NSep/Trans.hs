@@ -1,18 +1,22 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-
-{- | Simple lexer that extracts Tree of tokens from multi separator tree specification
--}
 {-# LANGUAGE LambdaCase #-}
 
-module DataCmd.Raw.NSep.RawToTree where
+{- | * Simple lexer that extracts Tree of tokens from multi separator tree specification
+     * Show Tree with multi-depth separator
+-}
 
-import DataCmd.Tree
-import DataCmd.Raw.NSep
-import Data.Char (isSpace)
-import DataCmd.Core.Trans (HasTrans (trn))
+module DataCmd.Raw.NSep.Trans where
+
+import DataCmd.Core.Trans (HasTrans (trnUp, trnDown))
 import DataCmd.Core.Res ((#<))
-import Data.List.NonEmpty (NonEmpty ((:|)))
+import DataCmd.Raw.NSep
+import DataCmd.Tree
+import Data.Char (isSpace)
+import Data.List.NonEmpty ( NonEmpty((:|)), toList )
 import qualified Data.List.NonEmpty as NE
+import Data.List (intercalate)
+
 
 -- >>> lexNSep '.' "0 . 1 . 20 .. 21 . 300 ... 301 .. 310 ... 311"
 -- ND [LF "0",LF "1",ND [LF "20",LF "21"],ND [ND [LF "300",LF "301"],ND [LF "310",LF "311"]]]
@@ -35,7 +39,15 @@ splitOnNSeps sep k = f Nothing "" []
                 | x /= sep && l' /= k -> f Nothing          (x:(replicate l' sep <> acc)) accs               xs
                 | otherwise           -> f Nothing          ""                            (reverse acc:accs) (x:xs)
 
+-- | Tree to raw n separated string
+showNSep :: Char -> Tree -> String
+showNSep c = f 1
+  where
+    f _ (LF s) = s
+    f k (ND ts) = intercalate (sep k) $ f (succ k) <$> toList ts
+
+    sep k = replicate k c
 
 instance HasTrans DotRaw Tree where
-  trn raw = pure (lexNSep '.' $ dotRawString raw) #< "Dot Lexer"
-
+  trnUp raw = pure (lexNSep '.' $ dotRawString raw) #< "Dot Lexer"
+  trnDown = pure . DotRaw . showNSep '.'

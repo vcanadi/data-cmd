@@ -13,12 +13,10 @@ module DataCmd.Form where
 
 import Data.Kind (Type)
 
-import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, Rec0, K1(K1), D1, Constructor (conName), from, U1, Selector (selName))
+import GHC.Generics ((:+:) (..), Generic (Rep), C1, S1, Rec0, D1, Constructor (conName), U1, (:*:))
 import DataCmd.Generic (Dummy (Dummy))
 import DataCmd.Core.Res(Res, (#<), (.#), (#+<), (#*<))
 import Data.Proxy (Proxy (Proxy))
-import DataCmd.Core.Trans (HasTrans (trn))
-import Control.Category ((>>>))
 import Control.Applicative ((<|>))
 
 
@@ -29,18 +27,18 @@ newtype FC = FC String deriving (Show, Eq, Generic)
 
 
 -- | Simplified generic value representation as a value-level tree
-data F = FΣ FC FΠ deriving (Eq, Generic)
-newtype FΠ = FΠ [F] deriving (Show, Eq, Generic)
+data Form = FΣ FC FΠ deriving (Eq, Generic)
+newtype FΠ = FΠ [Form] deriving (Show, Eq, Generic)
 
 
-pattern FPrim :: String -> F
+pattern FPrim :: String -> Form
 pattern FPrim c = FΣ (FC c) (FΠ [])
 
-pattern (:..) :: String -> [F] -> F
+pattern (:..) :: String -> [Form] -> Form
 pattern (:..) c ts = FΣ (FC c) (FΠ ts)
 
 -- | More concise Show instance that looks like pattern synonym construction
-instance Show F where
+instance Show Form where
   show (FPrim c) = "FPrim " <> c
   show (c :.. ps) = show c <> " :.. " <> show ps
 
@@ -89,5 +87,5 @@ instance (GFTyΠ f, Constructor m) => GFTyΣ (C1 m f)  where gFTyΣ _ _ = pure .
 -- | "Generic Tree Renderer" logic on generic product type
 class GFTyΠ (f :: Type -> Type)                where gFTyΠ :: Proxy f -> Res FTyΠ
 instance (GFTyΠ f, GFTyΠ g) => GFTyΠ (f :*: g) where gFTyΠ _ = (<>) <$> (gFTyΠ (Proxy @f) #*< "FST") <*> (gFTyΠ (Proxy @g) #*< "SND")
-instance HasFTy a => GFTyΠ (S1 m (Rec0 a))       where gFTyΠ _ = FTyΠ . pure <$> aFTy (Proxy @a) #*< "Type"
+instance HasFTy a => GFTyΠ (S1 m (Rec0 a))     where gFTyΠ _ = FTyΠ . pure <$> aFTy (Proxy @a) #*< "Type"
 instance GFTyΠ U1                              where gFTyΠ _ = pure $ FTyΠ []

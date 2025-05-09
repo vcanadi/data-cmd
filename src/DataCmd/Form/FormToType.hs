@@ -19,22 +19,19 @@ import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, 
 import Text.Read (readEither)
 import Data.Char (toLower)
 import DataCmd.Core.Res
-import DataCmd.Core.Trans (HasTrans (trn))
 import DataCmd.Generic (GTypNm (gTypNm) , TypNm (typNm), MW (mW), Dummy (Dummy))
 import Control.Applicative (Alternative((<|>), empty))
-import DataCmd.Form (pattern FPrim, F(FΣ), FC (FC), FΠ (FΠ), pattern (:..))
+import DataCmd.Form (pattern FPrim, Form(FΣ), FC (FC), FΠ (FΠ), pattern (:..))
 import Control.Arrow ((>>>))
 
 
 -- | Form parser that matchines leaf and reads content
-readF :: forall a. (TypNm a, Read a) => F -> Res a
+readF :: forall a. (TypNm a, Read a) => Form -> Res a
 readF (FPrim s) = parseEither s
 readF t = parseErr $ "expecting FPrim " <> typNm (Proxy @a) <> ", got: " <> show t
 
-instance (HasFP a) => HasTrans F a where
-  trn = aFP @a >>> (#< "Parser")
 
-class TypNm a => HasFP (a :: Type) where aFP :: F -> Res a
+class TypNm a => HasFP (a :: Type) where aFP :: Form -> Res a
 instance HasFP Bool   where aFP  = readF >>> (#< "Parsing Bool")
 instance HasFP Int    where aFP  = readF >>> (#< "Parsing Int")
 instance HasFP Float  where aFP  = readF >>> (#< "Parsing Float")
@@ -54,13 +51,13 @@ instance {-# OVERLAPS #-} (HasFP a, HasFP b, HasFP c) => HasFP (a,b, c) where
 instance {-# OVERLAPPABLE #-} (Generic a, GFP (Rep a), GTypNm (Rep a)) => HasFP a where aFP = genFP >>> (#< "Parsing " <> gTypNm (Proxy @(Rep a)))
 
 -- | Generic Form Parser
-genFP :: forall a. (Generic a, GFP (Rep a)) => F -> Res a
+genFP :: forall a. (Generic a, GFP (Rep a)) => Form -> Res a
 genFP = fmap (to @a) . gFP @(Rep a)
 
 -- Parser
 
 -- | Typeclass "GFP(Generic Form Parser)" whose instances (generic representations) know how to generate Form parser
-class GFP (f :: Type -> Type)     where gFP :: F -> Res (f p)
+class GFP (f :: Type -> Type)     where gFP :: Form -> Res (f p)
 instance (GFPΣ f) => GFP (D1 m f) where gFP fo = M1 <$> gFPΣ @f fo
 
 -- | Case invariant comparison
@@ -68,7 +65,7 @@ caseInvEq :: (Eq (f Char), Functor f) => f Char -> f Char -> Bool
 caseInvEq c0 c1 = fmap toLower c0 == fmap toLower c1
 
 -- | "Generic Form Parser" logic on generic sum type
-class GFPΣ (f :: Type -> Type)  where gFPΣ :: F -> Res (f p)
+class GFPΣ (f :: Type -> Type)  where gFPΣ :: Form -> Res (f p)
 instance (GFPΣ f, GFPΣ g)
               => GFPΣ (f :+: g) where gFPΣ t = (L1 <$> gFPΣ @f t #< "L1")
                                            <|> (R1 <$> gFPΣ @g t #< "R1")

@@ -1,32 +1,25 @@
-module DataCmd
-   ( module DataCmd.Form.FormToType
-   , module DataCmd.Form.TypeToForm
-   , module DataCmd.Tree.FormToTree
-   , module DataCmd.Tree.TreeToForm
-   , module DataCmd.Raw.NSep.RawToTree
-   , module DataCmd.Raw.NSep.TreeToRaw
-   , module DataCmd.Raw.Brack.RawToTree
-   , module DataCmd.Raw.Brack.TreeToRaw
-   ) where
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE MonoLocalBinds #-}
 
-import DataCmd.Raw.NSep.RawToTree
-import DataCmd.Raw.NSep.TreeToRaw
-import DataCmd.Raw.Brack.RawToTree
-import DataCmd.Raw.Brack.TreeToRaw
-import DataCmd.Tree.TreeToForm
-import DataCmd.Tree.FormToTree
-import DataCmd.Form.FormToType
-import DataCmd.Form.TypeToForm
+module DataCmd where
+
+import DataCmd.Raw.NSep.Trans ()
+import DataCmd.Raw.Brack.Trans ()
+import DataCmd.Tree.Trans ()
+import DataCmd.Form.Trans ()
 import DataCmd.Core.Res (Res)
+import DataCmd.Core.Trans (trnUpChain, HasTrans)
 import DataCmd.Raw.NSep (DotRaw (DotRaw))
 import DataCmd.Tree (Tree)
-import DataCmd.Form (F)
-import Control.Arrow ((>>>))
-import DataCmd.Core.Trans (HasTrans(trn))
-import Control.Monad ((>=>))
+import DataCmd.Form
+import DataCmd.Raw.Brack (BrackRaw (BrackRaw), BrackPlusRaw (BrackPlusRaw))
 
--- parseDotRaw :: forall a. String -> Res a
--- parseDotRaw = DotRaw
---          >>> trn @DotRaw @Tree
---          >=> trn @Tree @F
---          >=> trn @F @a
+parseDotRaw :: forall a. HasTrans Form a => String -> Res a
+parseDotRaw = trnUpChain @'[DotRaw, Tree, Form, a] . DotRaw
+
+parseBrackRaw :: forall a. HasTrans Form a => String -> Res a
+parseBrackRaw = trnUpChain @'[BrackRaw, Tree, Form, a] . BrackRaw
+
+parseBrackPlusRaw :: forall a. (HasTrans Form a) =>String -> Res a
+parseBrackPlusRaw = trnUpChain @'[BrackPlusRaw, Tree, Form, a] . BrackPlusRaw

@@ -1,21 +1,22 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
-{- | Lexer that extract Tree by using brackets as branching indicator
+{- | * Lexer that extract Tree by using brackets as branching indicator
+     * Show tree with brackets
 -}
 
-module DataCmd.Raw.Brack.RawToTree where
+module DataCmd.Raw.Brack.Trans where
 
-import Control.Arrow (Arrow (first), (>>>))
+import DataCmd.Core.Trans (HasTrans (trnUp, trnDown))
+import DataCmd.Raw.Brack (BrackRaw (BrackRaw), BrackPlusRaw (BrackPlusRaw, brackPlusRawString), brackRawString)
+import Control.Arrow ( (>>>), Arrow(first) )
 import Data.List (isPrefixOf, isSuffixOf)
 import Data.Char (isSpace)
 import Data.Bool (bool)
 import DataCmd.Core.Res
 import DataCmd.Tree
 import Control.Applicative (Alternative(empty))
-import DataCmd.Core.Trans (HasTrans (trn))
 import Data.List.NonEmpty (NonEmpty, singleton)
-import DataCmd.Raw.Brack(BrackRaw (brackRawString), BrackPlusRaw (brackPlusRawString))
 
 -- | Variant of lexBrack that adds brackets to whitespace separation
 -- e.g. sp A (0 0)
@@ -52,8 +53,18 @@ lexBrack s = if isToken s then pure $ LF s else fmap ND $ traverse lexBrack =<< 
 
     isToken w = notElem '(' w && notElem ')' w
 
+
+-- | Tree to raw bracketed string
+showBrack :: Tree -> String
+showBrack (LF s) = s
+showBrack (ND ts) = concatMap (\t -> "(" <> showBrack t <> ")") ts
+
+
 instance HasTrans BrackRaw Tree where
-  trn = (lexBrack . brackRawString) >>> (#< "Brack Lexer")
+  trnUp = (lexBrack . brackRawString) >>> (#< "Brack Lexer")
+  trnDown = pure . BrackRaw . showBrack
 
 instance HasTrans BrackPlusRaw Tree where
-  trn = lexBrackPlus . brackPlusRawString
+  trnUp = lexBrackPlus . brackPlusRawString
+  trnDown = pure . BrackPlusRaw . showBrack
+

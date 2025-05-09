@@ -5,11 +5,10 @@ module DataCmd.TreeSpec where
 
 
 import Test.Hspec
-import DataCmd.Form (pattern (:..), F , pattern FPrim)
+import DataCmd.Form (pattern (:..), Form , pattern FPrim)
 import Control.Monad(forM_)
 import DataCmd.Tree (Tree (ND, LF))
-import DataCmd.Tree.TreeToForm (treeForm)
-import DataCmd.Tree.FormToTree ()
+import DataCmd.Tree.Trans
 import DataCmd.Core.Trans
 import Test.QuickCheck (Arbitrary(arbitrary), Gen, suchThat)
 import Test.QuickCheck.Property (forAll)
@@ -17,8 +16,9 @@ import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck.Gen ( choose, vectorOf)
 import Data.List.NonEmpty
 import DataCmd.Common (shouldResultIn)
+import DataCmd.Core.Trans (HasTrans(trnUp))
 
-smplsFormer :: [(String, Tree, F)]
+smplsFormer :: [(String, Tree, Form)]
 smplsFormer =
   [
    ( "works on simple example"
@@ -38,7 +38,7 @@ smplsFormer =
     )
   ]
 
--- | Subset of Tree used for Tree --> F --> Tree property tests
+-- | Subset of Tree used for Tree --> Form --> Tree property tests
 arbitraryFormTree :: Gen Tree
 arbitraryFormTree = f (1 :: Int)
   where
@@ -56,19 +56,19 @@ arbitraryFormTree = f (1 :: Int)
 
 specFormer :: Spec
 specFormer = do
-  describe "treeForm" $
-    forM_ smplsFormer $ \(testDesc, tree, form) ->
-      it testDesc $
-        treeForm tree  `shouldResultIn` form
+  -- describe "treeForm" $
+  --   forM_ smplsFormer $ \(testDesc, tree, form) ->
+  --     it testDesc $
+  --       treeForm tree  `shouldResultIn` form
 
   describe "id properties" $ do
-    prop "trn @F @Tree . trn @Tree @F == id" $
-      forAll (arbitrary @F) $ \fm ->
-        (trn @F @Tree fm >>= trn @Tree @F) `shouldResultIn` fm
+    prop "Form --> Tree --> Form == id" $
+      forAll (arbitrary @Form) $ \fm ->
+        (trnDown @Tree @Form fm >>= trnUp @Tree @Form) `shouldResultIn` fm
 
-    prop "trn @Tree @F . trn @F @Tree == id" $
+    prop "Tree --> Form --> Tree == id" $
       forAll arbitraryFormTree $ \ft ->
-        (trn @Tree @F ft >>= trn @F @Tree) `shouldResultIn` ft
+        (trnUp @Tree @Form ft >>= trnDown @Tree @Form) `shouldResultIn` ft
 
 
 

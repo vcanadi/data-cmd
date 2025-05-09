@@ -3,80 +3,62 @@
 module DataCmd.IntegrationTestSpec where
 
 import Test.Hspec
--- import DataCmd.ParserSpec
 import DataCmd.Form
-import DataCmd.Tree.TreeToForm ()
-import DataCmd.Form.FormToType ()
-import Control.Monad((>=>))
+import DataCmd.Tree.Trans()
+import DataCmd.Form.Trans ()
 import DataCmd.Core.Res (Res(resRes))
 import DataCmd.Raw.NSep(DotRaw (DotRaw) )
 import DataCmd.Raw.Brack( BrackRaw (BrackRaw), BrackPlusRaw(BrackPlusRaw))
-import DataCmd.Raw.Brack.RawToTree ()
-import DataCmd.Raw.NSep.RawToTree ()
+import DataCmd.Raw.Brack.Trans()
+import DataCmd.Raw.NSep.Trans ()
 import DataCmd.Tree(Tree)
-import DataCmd.Core.Trans (HasTrans(trn))
+import DataCmd.Core.Trans (HasTrans(trnUp))
 import Control.Arrow ((>>>))
 import DataCmd.FormSpec
+import DataCmd
+import Control.Monad (forM_)
+
+-- | Different raw representations and expected end result
+smpls :: [(String , String, String, Act)]
+smpls =
+  [ ( "NoAct"
+    , "(NoAct)"
+    , "NoAct"
+    ,  NoAct
+    )
+  , ( "MoveDir . Dir .. 1 .. 2 "
+    , "(MoveDir)((Dir)(1)(2))"
+    , "MoveDir (Dir 1 2)"
+    , MoveDir (Dir 1 2)
+    )
+  , ( "MoveX . 1"
+    , "(MoveX)(1)"
+    , "MoveX 1"
+    , MoveX 1
+    )
+  , ( "Spawn . Pos .. 1 .. 2 . Player0"
+    , "(Spawn)((Pos)(1)(2))(Player0)"
+    , "Spawn (Pos 1 2) (Player0)"
+    , Spawn (Pos 1 2) "Player0"
+    )
+  , ( "Rope . Line .. Pos ... 1 ... 2 .. Pos ... 3 ... 4 "
+    , "(Rope)((Line)((Pos)(1)(2))((Pos)(3)(4)))"
+    , "Rope (Line (Pos 1 2) (Pos 3 4))"
+    , Rope $ Line (Pos 1 2) (Pos 3 4)
+    )
+
+  , ( "Chain . L .. Pos ... 1 ... 2 .. Pos ... 3 ... 4 .. Pos ... 5 ... 6"
+    , "(Chain)((L)((Pos)(1)(2))((Pos)(3)(4))((Pos)(5)(6)))"
+    , "Chain (L (Pos 1 2) (Pos 3 4) (Pos 5 6))"
+    , Chain [Pos 1 2, Pos 3 4, Pos 5 6]
+    )
+  ]
 
 spec :: Spec
 spec = do
-  describe "Use DotRaw for stage 0" $ do
-    let f =  DotRaw
-         >>> trn @DotRaw @Tree
-         >=> trn @Tree @F
-         >=> trn @F @Act
-
-    it "parses NoAct correctly"  $
-      f "NoAct"  `shouldSatisfy` (resRes >>> (== Just NoAct))
-
-    it "parses Move correctly"  $
-      f "MoveDir . Dir .. 1 .. 2 " `shouldSatisfy` (resRes >>> (== Just (MoveDir (Dir 1 2))))
-
-    it "parses MoveX correctly"  $
-      f "MoveX . 1"  `shouldSatisfy` (resRes >>> (== Just (MoveX 1)))
-
-    it "parses Spawn correctly"  $
-      f "Spawn . Pos .. 1 .. 2 . Player0" `shouldSatisfy` (resRes >>> (== Just (Spawn (Pos 1 2) "Player0")))
-
-    it "parses Rope correctly"  $
-      f "Rope . Line .. Pos ... 1 ... 2 .. Pos ... 3 ... 4 " `shouldSatisfy` (resRes >>> (== Just (Rope $ Line (Pos 1 2) (Pos 3 4))))
-
-
-  describe "Use BrackRaw for stage 0" $ do
-    let f = BrackRaw
-         >>> trn @BrackRaw @Tree
-         >=> trn @Tree @F
-         >=> trn @F @Act
-    it "parses NoAct correctly"  $
-      f "(NoAct)"  `shouldSatisfy` (resRes >>> (== Just  NoAct))
-
-    it "parses Move correctly"  $
-      f "(MoveDir)((Dir)(1)(2))" `shouldSatisfy` (resRes >>> (== Just (MoveDir (Dir 1 2))))
-
-    it "parses MoveX correctly"  $
-      f "(MoveX)(1)"  `shouldSatisfy` (resRes >>> (== Just (MoveX 1)))
-
-    it "parses Spawn correctly"  $
-      f "(Spawn)((Pos)(1)(2))(Player0)" `shouldSatisfy` (resRes >>> (== Just (Spawn (Pos 1 2) "Player0")))
-
-    it "parses Spawn correctly"  $
-      f "(Rope)((Line)((Pos)(1)(2))((Pos)(3)(4)))" `shouldSatisfy` (resRes >>> (== Just (Rope $ Line (Pos 1 2) (Pos 3 4) )))
-
-
-  describe "Use BrackPlusRaw for stage 0" $ do
-    let f = BrackPlusRaw
-         >>> trn @BrackPlusRaw @Tree
-         >=> trn @Tree @F
-         >=> trn @F @Act
-    it "parses NoAct correctly"  $
-      f "NoAct"  `shouldSatisfy` (resRes >>> (== Just  NoAct))
-
-    it "parses Move correctly"  $
-      f "MoveDir (Dir 1 2)" `shouldSatisfy` (resRes >>> (== Just (MoveDir (Dir 1 2))))
-
-    it "parses MoveX correctly"  $
-      f "MoveX 1"  `shouldSatisfy` (resRes >>> (== Just (MoveX 1)))
-
-    it "parses Spawn correctly"  $
-      f "Spawn (Pos 1 2) (Player0)" `shouldSatisfy` (resRes >>> (== Just (Spawn (Pos 1 2) "Player0")))
-
+  describe "Parses different raw string formats of action" $
+    forM_ smpls $ \(dotRaw, brackRaw, brackPlusRaw, act) ->
+      it (show act) $ do
+        parseDotRaw dotRaw `shouldSatisfy` (resRes >>> (== Just act))
+        parseBrackRaw brackRaw `shouldSatisfy` (resRes >>> (== Just act))
+        parseBrackPlusRaw brackPlusRaw `shouldSatisfy` (resRes >>> (== Just act))

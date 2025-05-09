@@ -3,14 +3,11 @@
 module DataCmd.Raw.NSepSpec where
 
 import Test.Hspec
-import DataCmd.Raw.NSep.RawToTree
-import DataCmd.Tree.TreeToForm ()
-import DataCmd.Tree.FormToTree ()
+import DataCmd.Tree.Trans ()
 import DataCmd.Tree
 import Control.Monad(forM_)
 import DataCmd.Raw.NSep (DotRaw (DotRaw))
-import DataCmd.Raw.NSep.RawToTree ()
-import DataCmd.Raw.NSep.TreeToRaw ()
+import DataCmd.Raw.NSep.Trans
 import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck (forAll, Arbitrary (..), Gen, suchThat, choose, vectorOf)
 import DataCmd.Core.Trans
@@ -83,13 +80,13 @@ specLexNSep = do
         lexNSep '.' raw `shouldBe` tree
 
   describe "id properties" $ do
-    prop "trn @Tree @DotRaw . trn @DotRaw @Tree == id" $
+    prop "Tree --> DotRaw --> Tree == id" $
       forAll (arbitraryTree) $ \t ->
-        (trn @Tree @DotRaw t >>= trn @DotRaw @Tree) `shouldResultIn` t
+        (trnDown @DotRaw @Tree t >>= trnUp @DotRaw @Tree) `shouldResultIn` t
 
-    prop "trn @DotRaw @Tree . trn @Tree @DotRaw == id" $
+    prop "DotRaw --> Tree --> DotRaw == id" $
       forAll arbitraryDot $ \raw ->
-        (trn @DotRaw @Tree (DotRaw raw) >>= trn @Tree @DotRaw) `shouldResultIn` DotRaw raw
+        (trnUp @DotRaw @Tree (DotRaw raw) >>= trnDown @DotRaw @Tree ) `shouldResultIn` DotRaw raw
 
 
 spec :: Spec
