@@ -61,10 +61,11 @@ showBrack (ND ts) = concatMap (\t -> "(" <> showBrack t <> ")") ts
 
 
 instance HasTrans BrackRaw Tree where
-  trnUp = (lexBrack . brackRawString) >>> (#< "Brack Lexer")
-  trnDown = pure . BrackRaw . showBrack
+  trnUp = (lexBrack . brackRawString) >>> (#< "BrackRaw to Tree")
+  trnDown = (pure . BrackRaw . showBrack) >>> (#< "Tree to BrackRaw")
 
 instance HasTrans BrackPlusRaw Tree where
-  trnUp = lexBrackPlus . brackPlusRawString
-  trnDown = pure . BrackPlusRaw . showBrack
+  trnUp = (lexBrackPlus . brackPlusRawString) >>> (#< "BrackPlusRaw to Tree")
+  trnDown = (pure . BrackPlusRaw . showBrack) >>> (#< "Tree to BrackPlusRaw")
+
 

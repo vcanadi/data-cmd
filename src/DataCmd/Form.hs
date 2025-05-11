@@ -13,9 +13,9 @@ module DataCmd.Form where
 
 import Data.Kind (Type)
 
-import GHC.Generics ((:+:) (..), Generic (Rep), C1, S1, Rec0, D1, Constructor (conName), U1, (:*:))
+import GHC.Generics ((:+:) (..), Generic (Rep), C1, S1, Rec0, D1, Constructor (conName), U1, (:*:), Datatype, datatypeName)
 import DataCmd.Generic (Dummy (Dummy))
-import DataCmd.Core.Res(Res, (#<), (.#), (#+<), (#*<))
+import DataCmd.Core.Res(Res, (#<), (.#), resNewAN)
 import Data.Proxy (Proxy (Proxy))
 import Control.Applicative ((<|>))
 
@@ -77,15 +77,15 @@ genFTy _ = gFTy (Proxy @(Rep a))
 
 -- | Typeclass "GFTy(Generic FTy)" whose instances (generic representations) know how to render to Tree
 class GFTy (f :: Type -> Type)  where gFTy :: Proxy f -> Res FTy
-instance GFTyΣ f => GFTy (D1 m f) where gFTy _ = FTyΣ <$> gFTyΣ False (Proxy @f) #< "Form"
+instance (GFTyΣ f, Datatype m) => GFTy (D1 m f) where gFTy _ = FTyΣ <$> resNewAN ("Datatype " <> datatypeName @m Dummy) (gFTyΣ False (Proxy @f))
 
 -- | "Generic Tree Renderer" logic on generic sum type
 class GFTyΣ (f :: Type -> Type)                      where gFTyΣ :: Bool -> Proxy f -> Res [(FTyC, FTyΠ)]
-instance (GFTyΣ f, GFTyΣ g)       => GFTyΣ (f :+: g) where gFTyΣ _ _ = (gFTyΣ True (Proxy @f) #+< "L1") <|> (gFTyΣ True (Proxy @g) #+< "R1")
-instance (GFTyΠ f, Constructor m) => GFTyΣ (C1 m f)  where gFTyΣ _ _ = pure . (FTyC $ conName @m Dummy,) <$> gFTyΠ (Proxy @f) #+< ("Con " <> conName @m Dummy )
+instance (GFTyΣ f, GFTyΣ g)       => GFTyΣ (f :+: g) where gFTyΣ _ _ = (gFTyΣ True (Proxy @f) #< "L1") <|> (gFTyΣ True (Proxy @g) #< "R1")
+instance (GFTyΠ f, Constructor m) => GFTyΣ (C1 m f)  where gFTyΣ _ _ = pure . (FTyC $ conName @m Dummy,) <$> resNewAN ("Con " <> conName @m Dummy) (gFTyΠ (Proxy @f))
 
 -- | "Generic Tree Renderer" logic on generic product type
 class GFTyΠ (f :: Type -> Type)                where gFTyΠ :: Proxy f -> Res FTyΠ
-instance (GFTyΠ f, GFTyΠ g) => GFTyΠ (f :*: g) where gFTyΠ _ = (<>) <$> (gFTyΠ (Proxy @f) #*< "FST") <*> (gFTyΠ (Proxy @g) #*< "SND")
-instance HasFTy a => GFTyΠ (S1 m (Rec0 a))     where gFTyΠ _ = FTyΠ . pure <$> aFTy (Proxy @a) #*< "Type"
+instance (GFTyΠ f, GFTyΠ g) => GFTyΠ (f :*: g) where gFTyΠ _ = (<>) <$> (gFTyΠ (Proxy @f) #< "FST") <*> (gFTyΠ (Proxy @g) #< "SND")
+instance HasFTy a => GFTyΠ (S1 m (Rec0 a))     where gFTyΠ _ = FTyΠ . pure <$> aFTy (Proxy @a) #< "Type"
 instance GFTyΠ U1                              where gFTyΠ _ = pure $ FTyΠ []

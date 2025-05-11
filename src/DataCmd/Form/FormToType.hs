@@ -1,4 +1,5 @@
 {- | Convert Form into generic type representation -}
+
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE KindSignatures #-}
@@ -8,28 +9,25 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PatternSynonyms #-}
-{-#  OPTIONS_GHC -fno-warn-orphans #-}
 
 module DataCmd.Form.FormToType where
 
 import Data.Kind (Type)
 
 import Data.Proxy
-import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, Rec0, U1(U1), K1(K1), D1, to, Constructor (conName), Selector, selName)
+import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, Rec0, U1(U1), K1(K1), D1, to, Constructor (conName), Selector, selName, Datatype (..))
 import Text.Read (readEither)
 import Data.Char (toLower)
-import DataCmd.Core.Res
+import DataCmd.Core.Res ((#<), Res, resNewOR, resNewAN)
 import DataCmd.Generic (GTypNm (gTypNm) , TypNm (typNm), MW (mW), Dummy (Dummy))
 import Control.Applicative (Alternative((<|>), empty))
 import DataCmd.Form (pattern FPrim, Form(FΣ), FC (FC), FΠ (FΠ), pattern (:..))
 import Control.Arrow ((>>>))
 
-
 -- | Form parser that matchines leaf and reads content
 readF :: forall a. (TypNm a, Read a) => Form -> Res a
 readF (FPrim s) = parseEither s
 readF t = parseErr $ "expecting FPrim " <> typNm (Proxy @a) <> ", got: " <> show t
-
 
 class TypNm a => HasFP (a :: Type) where aFP :: Form -> Res a
 instance HasFP Bool   where aFP  = readF >>> (#< "Parsing Bool")
@@ -57,8 +55,8 @@ genFP = fmap (to @a) . gFP @(Rep a)
 -- Parser
 
 -- | Typeclass "GFP(Generic Form Parser)" whose instances (generic representations) know how to generate Form parser
-class GFP (f :: Type -> Type)     where gFP :: Form -> Res (f p)
-instance (GFPΣ f) => GFP (D1 m f) where gFP fo = M1 <$> gFPΣ @f fo
+class GFP (f :: Type -> Type)                 where gFP :: Form -> Res (f p)
+instance (GFPΣ f, Datatype m) => GFP (D1 m f) where gFP fo = M1 <$> resNewOR ("Datatype " <> datatypeName @m Dummy) (gFPΣ @f fo)
 
 -- | Case invariant comparison
 caseInvEq :: (Eq (f Char), Functor f) => f Char -> f Char -> Bool
@@ -71,7 +69,7 @@ instance (GFPΣ f, GFPΣ g)
                                            <|> (R1 <$> gFPΣ @g t #< "R1")
 instance (GFPΠ f, Constructor m)
               => GFPΣ (C1 m f)  where gFPΣ (FΣ (FC c) ts)
-                                          | conName @m Dummy `caseInvEq` c = M1 <$> gFPΠ @f ts #< conParseSuccMsg (conName @m Dummy)
+                                          | conName @m Dummy `caseInvEq` c = M1 <$> resNewAN (conParseSuccMsg (conName @m Dummy)) (gFPΠ @f ts)
                                           | otherwise                      = parseErr $ conParseErrMsg c (conName @m Dummy)
 
 -- | "Generic Form Parser" logic on generic product type
@@ -80,7 +78,7 @@ instance (GFPΠ f, GFPΠ g, MW f)
           => GFPΠ (f :*: g)     where gFPΠ (FΠ ts)  = (:*:) <$> (gFPΠ @f (FΠ $ take (mW (Proxy @f)) ts) #< "FST")
                                                             <*> (gFPΠ @g (FΠ $ drop (mW (Proxy @f)) ts) #< "SND")
 instance (HasFP a, Selector m)
-        => GFPΠ (S1 m (Rec0 a)) where gFPΠ (FΠ [t]) = M1 . K1 <$> aFP @a t #*<  selParseSuccMsg (selName @m Dummy)
+        => GFPΠ (S1 m (Rec0 a)) where gFPΠ (FΠ [t]) = M1 . K1 <$> aFP @a t #< selParseSuccMsg (selName @m Dummy)
                                       gFPΠ t        = parseErr $ selParseErrMsg (show t) (selName @m Dummy)
 instance GFPΠ U1                where gFPΠ _        = pure U1
 

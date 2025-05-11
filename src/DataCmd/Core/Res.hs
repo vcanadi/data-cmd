@@ -30,52 +30,64 @@ instance Monad Res where
     Nothing          -> Res l0 Nothing
     Just (Res l1 r1) -> Res (l0 `logSQ` l1) $ r0 >> r1
 
--- | Append AND log message to Res
-infixl 3 #*>
-(#*>) :: Res a -> String -> Res a
-(Res l a) #*> msg = Res (l `logAN` LogLf (Msgs [msg])) a
+-- -- | Append AND log message to Res
+-- infixl 3 #*>
+-- (#*>) :: Res a -> String -> Res a
+-- (Res l a) #*> msg = Res (l `logAN` LogLf (Msgs [msg])) a
 
--- | Prepend AND log message to Res
-infixl 3 #*<
-(#*<) :: Res a -> String -> Res a
-(Res l a) #*< msg = Res (LogLf (Msgs [msg]) `logAN` l) a
+-- -- | Prepend AND log message to Res
+-- infixl 3 #*<
+-- (#*<) :: Res a -> String -> Res a
+-- (Res l a) #*< msg = Res (LogLf (Msgs [msg]) `logAN` l) a
 
--- | Append OR log message to Res
-infixl 3 #+>
-(#+>) :: Res a -> String -> Res a
-(Res l a) #+> msg = Res (l `logOR` LogLf (Msgs [msg])) a
+-- -- | Append OR log message to Res
+-- infixl 3 #+>
+-- (#+>) :: Res a -> String -> Res a
+-- (Res l a) #+> msg = Res (l `logOR` LogLf (Msgs [msg])) a
 
--- | Prepend OR log message to Res
-infixl 3 #+<
-(#+<) :: Res a -> String -> Res a
-(Res l a) #+< msg = Res (LogLf (Msgs [msg]) `logOR` l) a
+-- -- | Prepend OR log message to Res
+-- infixl 3 #+<
+-- (#+<) :: Res a -> String -> Res a
+-- (Res l a) #+< msg = Res (LogLf (Msgs [msg]) `logOR` l) a
 
 
--- | Prepend SEQ log message to Res
-infixl 3 #><
-(#><) :: Res a -> String -> Res a
-(Res l a) #>< msg = Res (LogLf (Msgs [msg]) `logSQ` l) a
+-- -- | Prepend SEQ log message to Res
+-- infixl 3 #><
+-- (#><) :: Res a -> String -> Res a
+-- (Res l a) #>< msg = Res (LogLf (Msgs [msg]) `logSQ` l) a
 
--- | Append SEQ log message to Res
-infixl 3 #>>
-(#>>) :: Res a -> String -> Res a
-(Res l a) #>> msg = Res (l `logSQ` LogLf (Msgs [msg])) a
+-- -- | Append SEQ log message to Res
+-- infixl 3 #>>
+-- (#>>) :: Res a -> String -> Res a
+-- (Res l a) #>> msg = Res (l `logSQ` LogLf (Msgs [msg])) a
 
 
 infixl 3 .#
 -- | Create Res with log message
 (.#) :: a -> String -> Res a
-a .# msg = Res (LogLf (Msgs [msg])) $ Just a
+a .# msg = Res (LogLf (newMsgs msg)) $ Just a
 
 -- | Append log message to Res
 infixl 3 #<
 (#<) :: Res a -> String -> Res a
-(Res l a) #< msg = Res (prependMsg msg l) a
+(Res l a) #< msg = Res (logPrependMsg msg l) a
 
 -- | Prepend log message to Res
 infixl 3 #>
 (#>) :: Res a -> String -> Res a
-(Res l a) #> msg = Res (appendMsg msg l) a
+(Res l a) #> msg = Res (logAppendMsg msg l) a
+
+-- | Wrap results log with new AND layer
+resNewAN :: String -> Res a -> Res a
+resNewAN msg = mapLog (newAN $ newMsgs msg)
+
+-- | Wrap results log with new OR layer
+resNewOR :: String -> Res a -> Res a
+resNewOR msg = mapLog (newOR $ newMsgs msg)
+
+-- | Wrap results log with new SEQ layer
+resNewSQ :: String -> Res a -> Res a
+resNewSQ msg = mapLog (newSQ $ newMsgs msg)
 
 mapLog :: (LogT -> LogT) -> Res a -> Res a
 mapLog f (Res l r) = Res (f l) r

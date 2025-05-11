@@ -49,5 +49,5 @@ showNSep c = f 1
     sep k = replicate k c
 
 instance HasTrans DotRaw Tree where
-  trnUp raw = pure (lexNSep '.' $ dotRawString raw) #< "Dot Lexer"
+  trnUp raw = pure (lexNSep '.' $ dotRawString raw) #< "DotRaw to Tree"
   trnDown = pure . DotRaw . showNSep '.'

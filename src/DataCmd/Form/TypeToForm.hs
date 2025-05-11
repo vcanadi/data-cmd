@@ -6,15 +6,14 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 
 module DataCmd.Form.TypeToForm where
 
 import Data.Kind (Type)
 
-import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, Rec0, K1(K1), D1, Constructor (conName), from, U1, Selector (selName))
+import GHC.Generics (M1 (..), (:+:) (..), (:*:) ((:*:)), Generic (Rep), C1, S1, Rec0, K1(K1), D1, Constructor (conName), from, U1, Selector (selName), Datatype, datatypeName)
 import DataCmd.Generic (Dummy (Dummy))
-import DataCmd.Core.Res(Res, (#<), (.#), (#+<))
+import DataCmd.Core.Res(Res, (#<), (.#), resNewOR, resNewAN)
 import DataCmd.Form
 
 -- | Types whose values can be rendered to Form
@@ -34,12 +33,12 @@ genF = gF . from
 
 -- | Typeclass "GF(Generic Form)" whose instances (generic representations) know how to render to Tree
 class GF (f :: Type -> Type)  where gF :: f p -> Res Form
-instance GFΣ f => GF (D1 m f) where gF (M1 x) = gFΣ False x
+instance (GFΣ f, Datatype m) => GF (D1 m f) where gF (M1 x) = resNewOR ("Datatype " <> datatypeName @m Dummy) $ gFΣ False x
 
 -- | "Generic Tree Renderer" logic on generic sum type
 class GFΣ (f :: Type -> Type)                   where gFΣ :: Bool -> f p -> Res Form
-instance (GFΣ f, GFΣ g)        => GFΣ (f :+: g) where gFΣ _ (L1 x) = gFΣ True x #+< "L1"; gFΣ _ (R1 x) = gFΣ True x #+< "R1"
-instance (GFΠ f, Constructor m) => GFΣ (C1 m f) where gFΣ _ (M1 x) = (FΣ (FC $ conName @m Dummy) <$> gFΠ x) #< ("Con " <> conName @m Dummy)
+instance (GFΣ f, GFΣ g)        => GFΣ (f :+: g) where gFΣ _ (L1 x) = gFΣ True x #< "L1"; gFΣ _ (R1 x) = gFΣ True x #< "R1"
+instance (GFΠ f, Constructor m) => GFΣ (C1 m f) where gFΣ _ (M1 x) = resNewAN ("Con " <> conName @m Dummy) $ (FΣ (FC $ conName @m Dummy) <$> gFΠ x)
 
 -- | "Generic Tree Renderer" logic on generic product type
 class GFΠ (f :: Type -> Type)                        where gFΠ :: f p -> Res FΠ

@@ -14,5 +14,5 @@ import DataCmd.Form.TypeToForm (HasF(aF), GF)
 import GHC.Generics (Generic, Rep)
 
 instance (HasFP a, Generic a, GF (Rep a), Show a) => HasTrans Form a where
-  trnUp = aFP @a >>> (#< "Parser")
-  trnDown = aF @a >>> (#< "Form render")
+  trnUp = aFP @a >>> (#< "Form to Type")
+  trnDown = aF @a >>> (#< "Type to Form")
