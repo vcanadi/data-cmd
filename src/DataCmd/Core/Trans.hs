@@ -23,12 +23,15 @@ class HasTrans a b where
 -- | Chain of transformations from first type in the type list to the last
 class HasTransChain as where
   trnUpChain :: HED as -> Res (LST as)
+  trnDownChain :: LST as -> Res (HED as)
 
 instance {-# OVERLAPS #-} HasTrans a b => HasTransChain '[a, b] where
   trnUpChain = trnUp @a @b
+  trnDownChain = trnDown @a @b
 
 instance {-# OVERLAPPABLE #-} (HasTrans a b, HasTransChain (b ': as)) => HasTransChain (a ': b ': as) where
   trnUpChain = trnUp @a @b >=> trnUpChain @(b ': as)
+  trnDownChain = trnDownChain @(b ': as) >=> trnDown @a @b
 
 -- | List head
 type family HED (a :: [k]) :: k where

@@ -66,6 +66,6 @@ instance HasTrans BrackRaw Tree where
 
 instance HasTrans BrackPlusRaw Tree where
   trnUp = (lexBrackPlus . brackPlusRawString) >>> (#< "BrackPlusRaw to Tree")
-  trnDown = (pure . BrackPlusRaw . showBrack) >>> (#< "Tree to BrackPlusRaw")
+  trnDown = (pure . BrackPlusRaw . showT) >>> (#< "Tree to BrackPlusRaw")
 
 
